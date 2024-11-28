@@ -1,0 +1,26 @@
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Node.js dependencies
+node_modules/
+
+# Database files
+*.sqlite
+*.db
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# Build directories
+dist/
+build/
+
+# Test coverage
+coverage/
