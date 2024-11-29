@@ -11,7 +11,7 @@ const createApiEndpoint = async (url, serviceKey, parameters) => {
   try {
     console.log('Creating API endpoint:', { url, serviceKey, parameters });
     const result = await query(
-      'INSERT INTO apiendpoint (url, serviceKey, parameters) VALUES ($1, $2, $3) RETURNING *',
+      'INSERT INTO apiendpoint ("url", "serviceKey", "parameters") VALUES ($1, $2, $3) RETURNING *',
       [url, serviceKey, JSON.stringify(parameters)]
     );
     return result[0];

@@ -15,6 +15,7 @@ module.exports = new EntitySchema({
     },
     serviceKey: {
       type: 'varchar',
+      nullable: true,
     },
     parameters: {
       type: 'json',

@@ -6,9 +6,9 @@ const initDb = async () => {
       const createApiEndpointTable = `
         CREATE TABLE IF NOT EXISTS apiendpoint (
           id SERIAL PRIMARY KEY,
-          url VARCHAR(255) NOT NULL,
-          serviceKey VARCHAR(255),
-          parameters JSONB
+          "url" VARCHAR(3000) NOT NULL,
+          "serviceKey" VARCHAR(3000),
+          "parameters" JSONB
         );
       `;
   
