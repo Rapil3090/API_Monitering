@@ -2,7 +2,6 @@ const axios = require('axios');
 const { query } = require('../db');
 const ApiEndpointRepository =  require('../repositories/ApiEndpointRepository');
 const ApiResponseRepository =  require('../repositories/ApiResponseRepository');
-const apiEndpointRepository = require('../repositories/ApiEndpointRepository');
 
 
 const getAllApiEndpoints = async () => {
@@ -11,7 +10,7 @@ const getAllApiEndpoints = async () => {
 
 const scheduledApiCall = async () => {
 
-  const apiEndpoints = await apiEndpointRepository.find();
+  const apiEndpoints = await ApiEndpointRepository.find();
 
   apiEndpoints.forEach(apiEndpoint => {
     getApi(apiEndpoint) 
