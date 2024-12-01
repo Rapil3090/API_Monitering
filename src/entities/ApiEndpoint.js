@@ -13,13 +13,13 @@ module.exports = new EntitySchema({
       type: 'varchar',
       nullable: false,
     },
-    serviceKey: {
-      type: 'varchar',
-      nullable: true,
-    },
+    // serviceKey: {
+    //   type: 'varchar',
+    //   nullable: true,
+    // },
     parameters: {
-      type: 'json',
-      nullable: false,
+      type: 'jsonb',
+      nullable: true,
     },
   },
 });

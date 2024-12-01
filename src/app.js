@@ -3,11 +3,20 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { getAllApiEndpoints, createApiEndpoint } = require('./services/ApiEndpointService');
 const initDb = require('./initDb');
+const AppDataSource = require('./data-source');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
+
+AppDataSource.initialize()
+.then(() => {
+  console.log('초기화');
+})
+.catch((err) => {
+  console.error('에러 발생',err);
+})
 
 initDb()
 .then(() => {
@@ -33,9 +42,9 @@ app.get('/api-endpoints', async (req, res) => {
 
 
 app.post('/api-endpoints', async (req, res) => {
-  const { url, serviceKey, parameters } = req.body;
+  const { url, parameters = [] } = req.body;
   try {
-    const newEndpoint = await createApiEndpoint(url, serviceKey, parameters);
+    const newEndpoint = await createApiEndpoint(url, parameters);
     return res.status(201).json(newEndpoint);
   } catch (error) {
     console.error('Error creating API endpoint:', error.message, error.stack);

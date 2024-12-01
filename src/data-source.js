@@ -1,5 +1,5 @@
 const { DataSource } = require('typeorm');
-const ApiEndpoint = require('./entities/ApiEndpoint');
+// const ApiEndpoint = require('./entities/ApiEndpoint');
 require('dotenv').config();
 
 const AppDataSource = new DataSource({
