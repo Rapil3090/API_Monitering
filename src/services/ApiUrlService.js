@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const AppDataSource = require('../data-source');
 const ApiUrl = require('../entities/ApiUrl');
 const ApiUrlRepository =  require('../repositories/ApiUrlRepository');
+// const apiUrlRepository =  require('../repositories/ApiUrlRepository');
 
 
 const urlPatterns = [
@@ -97,17 +98,15 @@ async function crawlAndExtractUrls() {
           console.log(`총 ${foundUrls.length}개의 URL 추출됨:`);
           for (const url of foundUrls) {
             console.log(`- ${url}`);
+            console.log("여기 로그0",ApiUrl);
 
-            // const apiUrlEntity = new ApiUrl();
-
-            const ApiUrl = url;
+            const apiUrlEntity = {
+              crawledUrl: url
+            };
 
             console.log("여기 로그1",ApiUrl);
-            apiUrlEntity.crawledUrl = ApiUrl;
 
-            // await apiUrlRepository.save(apiUrlEntity);
-
-            await ApiUrlRepository.save(ApiUrl); 
+            await ApiUrlRepository.save(apiUrlEntity); 
           }
         } else {
           console.log('패턴에 맞는 URL을 찾을 수 없습니다.');

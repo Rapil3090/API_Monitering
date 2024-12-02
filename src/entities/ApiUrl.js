@@ -12,7 +12,7 @@ module.exports = new EntitySchema({
         
         crawledUrl: {
             type: 'varchar',
-            nullable: true,
+            nullable: false,
         }
         
     }
