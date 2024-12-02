@@ -11,7 +11,7 @@ module.exports = new EntitySchema({
         },
         
         crawledUrl: {
-            type: 'text',
+            type: 'varchar',
             nullable: true,
         }
         
