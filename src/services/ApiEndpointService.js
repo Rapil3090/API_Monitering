@@ -75,7 +75,6 @@ const getApi = async (apiEndpoint) => {
 
     const responseTime = Date.now() - startTime;
     const ApiResponse = {
-      apiEndpoint,
       responseTime,
       body: response.data.substring(0, 255),
       statusCode: response.status,
