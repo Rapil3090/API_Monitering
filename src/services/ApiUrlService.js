@@ -100,13 +100,16 @@ async function crawlAndExtractUrls() {
             console.log(`- ${url}`);
             console.log("여기 로그0",ApiUrl);
 
-            const apiUrlEntity = {
-              crawledUrl: url
-            };
+            const existingUrl = await ApiUrlRepository.findOne({
+              where: { crawledUrl: url }});
+            
+            if (!existingUrl) {
+              const apiUrlEntity = {
+                crawledUrl: url
+              };
 
-            console.log("여기 로그1",ApiUrl);
-
-            await ApiUrlRepository.save(apiUrlEntity); 
+              await ApiUrlRepository.save(apiUrlEntity); 
+            }  
           }
         } else {
           console.log('패턴에 맞는 URL을 찾을 수 없습니다.');
