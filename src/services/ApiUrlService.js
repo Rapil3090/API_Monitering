@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const ApiUrlRepository = require('./repositories/ApiUrlRepository');
+const ApiUrlRepository =  require('../repositories/ApiUrlRepository');
 
 const urlPattern = [
   'http://apis.data.go.kr',
