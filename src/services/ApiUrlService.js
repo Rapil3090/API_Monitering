@@ -2,7 +2,6 @@ const puppeteer = require('puppeteer');
 const AppDataSource = require('../data-source');
 const ApiUrl = require('../entities/ApiUrl');
 const ApiUrlRepository =  require('../repositories/ApiUrlRepository');
-// const apiUrlRepository =  require('../repositories/ApiUrlRepository');
 
 
 const urlPatterns = [
@@ -128,4 +127,4 @@ async function crawlAndExtractUrls() {
   await browser.close();
 }
 
-crawlAndExtractUrls();
+module.exports = crawlAndExtractUrls;
