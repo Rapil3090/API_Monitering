@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const { getAllApiEndpoints, createApiEndpoint } = require('./services/ApiEndpointService');
 const initDb = require('./initDb');
 const AppDataSource = require('./data-source');
-const crawlAndSaveUrls = require('./services/ApiUrlService');
+const crawlAndExtractUrls = require('./services/ApiUrlService');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -53,9 +53,9 @@ app.post('/api-endpoints', async (req, res) => {
   }
 });
 
-app.post('/start-crawl', async (req, res) => {
+app.get('/start-crawl', async (req, res) => {
   try {
-    await crawlAndSaveUrls();
+    await crawlAndExtractUrls();
     res.status(200).send('크롤링 성공');
   } catch (error) {
     console.error('URL 가져오기 실패', error);
