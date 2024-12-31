@@ -39,8 +39,9 @@ export class ApiEndpointService {
     
   }
 
-  findAll() {
-    return `This action returns all apiEndpoint`;
+  async findAll() {
+
+    return this.apiEndpointRepository.find();
   }
 
   findOne(id: number) {
