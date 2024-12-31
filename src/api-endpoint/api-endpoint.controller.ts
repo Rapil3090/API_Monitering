@@ -17,9 +17,9 @@ export class ApiEndpointController {
     return this.apiEndpointService.getAllEndpoints();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.apiEndpointService.findOne(+id);
+  @Get(':url')
+  findByUrl(@Param('url') url: string) {
+    return this.apiEndpointService.findByUrl(url);
   }
 
   @Patch(':id')

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
 import { UpdateApiEndpointDto } from './dto/update-api-endpoint.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -44,8 +44,20 @@ export class ApiEndpointService {
     return this.apiEndpointRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} apiEndpoint`;
+  // url 기준으로 검색해서 저장된 정보를 가져온다
+  async findByUrl(url: string) {
+    
+    const existsByUrl= await this.apiEndpointRepository.findOne({
+      where: {
+        url,
+      },
+    });
+
+    if (!existsByUrl) {
+      throw new NotFoundException(`해당 ${url}이 저장되어 있지 않습니다.`)
+    };
+
+    return existsByUrl;
   }
 
   update(id: number, updateApiEndpointDto: UpdateApiEndpointDto) {
