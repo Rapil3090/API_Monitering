@@ -14,7 +14,7 @@ export class ApiEndpointController {
 
   @Get()
   findAll() {
-    return this.apiEndpointService.findAll();
+    return this.apiEndpointService.getAllEndpoints();
   }
 
   @Get(':id')

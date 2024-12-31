@@ -39,7 +39,7 @@ export class ApiEndpointService {
     
   }
 
-  async findAll() {
+  async getAllEndpoints() {
 
     return this.apiEndpointRepository.find();
   }
