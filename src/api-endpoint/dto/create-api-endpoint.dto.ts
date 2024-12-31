@@ -8,6 +8,6 @@ export class CreateApiEndpointDto {
 
     @IsNotEmpty()
     @IsArray()
-    parameters: string[];
+    parameters?: Record<any, any>;
 
 }

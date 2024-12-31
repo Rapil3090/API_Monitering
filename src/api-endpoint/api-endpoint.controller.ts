@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { ApiEndpointService } from './api-endpoint.service';
 import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
 import { UpdateApiEndpointDto } from './dto/update-api-endpoint.dto';
@@ -22,13 +22,13 @@ export class ApiEndpointController {
     return this.apiEndpointService.findByUrl(url);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateApiEndpointDto: UpdateApiEndpointDto) {
-    return this.apiEndpointService.update(+id, updateApiEndpointDto);
+  @Patch()
+  update(@Body() updateApiEndpointDto: UpdateApiEndpointDto) {
+    return this.apiEndpointService.update(updateApiEndpointDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.apiEndpointService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.apiEndpointService.remove(id);
   }
 }

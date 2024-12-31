@@ -29,14 +29,17 @@ export class ApiEndpointService {
 
     const apiEndpoint = await this.apiEndpointRepository.create({
       url,
-      parameters: parameters
+      parameters,
     });
 
     await this.apiEndpointRepository.save(apiEndpoint);
 
 
-    return 'ok';
-    
+    return await this.apiEndpointRepository.findOne({
+      where: {
+        url,
+      },
+    });
   }
 
   async getAllEndpoints() {
@@ -44,7 +47,6 @@ export class ApiEndpointService {
     return this.apiEndpointRepository.find();
   }
 
-  // url 기준으로 검색해서 저장된 정보를 가져온다
   async findByUrl(url: string) {
     
     const existsByUrl= await this.apiEndpointRepository.findOne({
@@ -60,11 +62,60 @@ export class ApiEndpointService {
     return existsByUrl;
   }
 
-  update(id: number, updateApiEndpointDto: UpdateApiEndpointDto) {
-    return `This action updates a #${id} apiEndpoint`;
+  async update(updateApiEndpointDto: UpdateApiEndpointDto) {
+
+    const { id, url, parameters }  = updateApiEndpointDto;
+
+    const apiEndpoint = await this.apiEndpointRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    console.log(apiEndpoint);
+
+    const existingEndpoint = await this.apiEndpointRepository.findOne({
+      where: {
+        url,
+      },
+    });
+
+    console.log(existingEndpoint);
+
+    if(existingEndpoint && id !== existingEndpoint.id) {
+      throw new BadRequestException(`중복된 url : ${url} 입니다.`);
+    }
+
+    await this.apiEndpointRepository.update({
+      id,
+    }, {
+      url,
+      parameters,
+    });
+
+    const newApiEndpoint = await this.apiEndpointRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    return newApiEndpoint;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} apiEndpoint`;
+  async remove(id: number) {
+
+    const existsByUrl= await this.apiEndpointRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!existsByUrl) {
+      throw new NotFoundException(`해당 ${id}이 저장되어 있지 않습니다.`)
+    };
+
+    await this.apiEndpointRepository.delete(id);
+
+    return 'ok';
   }
 }
