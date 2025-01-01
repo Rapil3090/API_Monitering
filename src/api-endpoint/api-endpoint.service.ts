@@ -72,15 +72,11 @@ export class ApiEndpointService {
       },
     });
 
-    console.log(apiEndpoint);
-
     const existingEndpoint = await this.apiEndpointRepository.findOne({
       where: {
         url,
       },
     });
-
-    console.log(existingEndpoint);
 
     if(existingEndpoint && id !== existingEndpoint.id) {
       throw new BadRequestException(`중복된 url : ${url} 입니다.`);
