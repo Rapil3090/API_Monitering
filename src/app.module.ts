@@ -6,6 +6,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApiEndpoint } from './api-endpoint/entities/api-endpoint.entity';
+import { ApiResponseModule } from './api-response/api-response.module';
+import { ApiResponse } from './api-response/entities/api-response.entity';
 
 @Module({
   imports: [
@@ -31,12 +33,14 @@ import { ApiEndpoint } from './api-endpoint/entities/api-endpoint.entity';
         database: configService.get<string>('DB_DATABASE'),
         entities: [
           ApiEndpoint,
+          ApiResponse,
         ],
         synchronize: true,
       }),
       inject: [ConfigService]
     }),
     ApiEndpointModule,
+    ApiResponseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

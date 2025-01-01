@@ -17,9 +17,9 @@ export class ApiEndpointController {
     return this.apiEndpointService.getAllEndpoints();
   }
 
-  @Get(':url')
-  findByUrl(@Param('url') url: string) {
-    return this.apiEndpointService.findByUrl(url);
+  @Get(':id')
+  findByUrl(@Param('id') id: number) {
+    return this.apiEndpointService.findByUrl(id);
   }
 
   @Patch()
@@ -30,5 +30,10 @@ export class ApiEndpointController {
   @Delete(':id')
   remove(@Param('id') id: number) {
     return this.apiEndpointService.remove(id);
+  }
+
+  @Get('/test/test')
+  test() {
+    return this.apiEndpointService.sendApiRequest();
   }
 }

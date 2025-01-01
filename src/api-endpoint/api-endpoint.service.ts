@@ -4,6 +4,8 @@ import { UpdateApiEndpointDto } from './dto/update-api-endpoint.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiEndpoint } from './entities/api-endpoint.entity';
 import { Repository } from 'typeorm';
+import axios, { AxiosResponse } from 'axios';
+import { ApiResponse } from 'src/api-response/entities/api-response.entity';
 
 @Injectable()
 export class ApiEndpointService {
@@ -11,6 +13,8 @@ export class ApiEndpointService {
   constructor(
     @InjectRepository(ApiEndpoint)
     private readonly apiEndpointRepository: Repository<ApiEndpoint>,
+    @InjectRepository(ApiResponse)
+    private readonly apiResponseRepository: Repository<ApiResponse>,
   ){}
 
   async create(createApiEndpointDto: CreateApiEndpointDto) {
@@ -47,16 +51,16 @@ export class ApiEndpointService {
     return this.apiEndpointRepository.find();
   }
 
-  async findByUrl(url: string) {
+  async findByUrl(id: number) {
     
     const existsByUrl= await this.apiEndpointRepository.findOne({
       where: {
-        url,
+        id,
       },
     });
 
     if (!existsByUrl) {
-      throw new NotFoundException(`해당 ${url}이 저장되어 있지 않습니다.`)
+      throw new NotFoundException(`해당 ${id}이 저장되어 있지 않습니다.`)
     };
 
     return existsByUrl;
@@ -113,5 +117,51 @@ export class ApiEndpointService {
     await this.apiEndpointRepository.delete(id);
 
     return 'ok';
+  }
+
+  async sendApiRequest () {
+    
+    const apiEndpoint = await this.apiEndpointRepository.find();
+
+    console.log(apiEndpoint);
+
+    for (const endpoint of apiEndpoint) {
+      const url = endpoint.url;
+      const parameters = endpoint.parameters;
+      const startTime = Date.now();
+
+      const response : AxiosResponse = await axios.get(url, {
+        params: parameters.reduce((acc, param) => {
+          if(param.type.toLowerCase() === 'query') {
+            acc[param.key] = param.value;
+          }
+          return acc;
+        }, {}),
+
+        headers: parameters.reduce((acc, param) => {
+          if (param.type.toLowerCase() === 'header') {
+            acc[param.key] = param.value;
+          }
+          return acc;
+        }, {})
+      });
+
+      const responseTime = Date.now() - startTime;
+      const apiRespones = {
+        responseTime,
+        body: response.data.substring(0, 255),
+        statusCode: response.status,
+        success: true
+      };
+
+      await this.apiResponseRepository.save(apiRespones);
+
+      return apiRespones;
+      
+    }
+
+
+    
+    
   }
 }
