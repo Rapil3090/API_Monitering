@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, InternalServerErrorException } from '@nestjs/common';
 import { ApiEndpointService } from './api-endpoint.service';
 import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
 import { UpdateApiEndpointDto } from './dto/update-api-endpoint.dto';
@@ -40,5 +40,10 @@ export class ApiEndpointController {
   @Get('/test/apicallstop')
   apiCallStop() {
     return this.apiEndpointService.stopAllTimer();
+  }
+
+  @Get('/test/500')
+  triggerError() {
+    throw new InternalServerErrorException('의도적으로 발생시킴')
   }
 }

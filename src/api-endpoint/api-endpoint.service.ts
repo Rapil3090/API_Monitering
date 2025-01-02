@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, RequestTimeoutException } from '@nestjs/common';
 import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
 import { UpdateApiEndpointDto } from './dto/update-api-endpoint.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -127,35 +127,54 @@ export class ApiEndpointService {
 
     const url = apiEndpoint.url;
     const parameters = apiEndpoint.parameters;
-    const startTime = Date.now();
+    const retries = 3;
+    
+    for (let i = 1; i <= retries; i++) {
+      const startTime = Date.now();
+  
+      try {
+        const response: AxiosResponse = await axios.get(url, {
+          params: parameters.reduce((acc, param) => {
+            if (param.type && typeof param.type === 'string' && param.type.toLowerCase() === 'query') {
+              acc[param.key] = param.value;
+            }
+            return acc;
+          }, {}),
+          headers: parameters.reduce((acc, param) => {
+            if (param.type && typeof param.type === 'string' && param.type.toLowerCase() === 'header') {
+              acc[param.key] = param.value;
+            }
+            return acc;
+          }, {}),
+          timeout: 5000,
+        });
+  
+        const responseTime = Date.now() - startTime;
+  
+        const apiResponse = {
+          responseTime,
+          body: response.data.substring(0, 255),
+          statusCode: response.status,
+          success: true,
+        };
+  
+        await this.apiResponseRepository.save(apiResponse);
+        return apiResponse;
+  
+      } catch (error) {
 
-    const response : AxiosResponse = await axios.get(url, {
-      params: parameters.reduce((acc, param) => {
-        if(param.type.toLowerCase() === 'query') {
-          acc[param.key] = param.value;
+        if (error.response && error.response.status === 500) {
+          console.warn(`HTTP 500 에러 발생. 재시도 중 (${i}/${retries})`);
+          
+          if (i === retries) {
+            console.error(`최대 재시도 횟수 초과: ${apiEndpoint.url}`);
+            throw new RequestTimeoutException(
+              `${apiEndpoint.url} 의 요청이 실패하였습니다. ID: ${apiEndpoint.id}`
+            );
+          }
+          continue;
         }
-        return acc;
-      }, {}),
-
-      headers: parameters.reduce((acc, param) => {
-        if (param.type.toLowerCase() === 'header') {
-          acc[param.key] = param.value;
-        }
-        return acc;
-      }, {})
-    });
-
-    const responseTime = Date.now() - startTime;
-    const apiRespones = {
-      responseTime,
-      body: response.data.substring(0, 255),
-      statusCode: response.status,
-      success: true
-    };
-
-    await this.apiResponseRepository.save(apiRespones);
-
-    return apiRespones;
+      }}
   };
 
   async scheduledApiCall() : Promise<void> {
@@ -184,8 +203,22 @@ export class ApiEndpointService {
       clearInterval(timer);
     });
     this.timers.clear();
-  }
+  };
 
+  async retryRequest(apiEndpoint: ApiEndpoint, retries = 3) {
+
+    for (let i = 1; i <= retries; i++) {
+
+      try {
+        return await this.sendApiRequest(apiEndpoint);
+      } catch (error) {
+        if (i === retries) {
+          throw new RequestTimeoutException(`${apiEndpoint.url} 의 요청이 실패하였습니다. ID: ${apiEndpoint.id} `);
+        };
+      };
+    };
+  };
+  
 
 
 }
