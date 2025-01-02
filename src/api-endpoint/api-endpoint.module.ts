@@ -13,6 +13,12 @@ import { ApiResponse } from 'src/api-response/entities/api-response.entity';
     ])
   ],
   controllers: [ApiEndpointController],
-  providers: [ApiEndpointService],
+  providers: [
+    ApiEndpointService,
+    {
+      provide: 'TIMERS_MAP',
+      useValue: new Map<number, NodeJS.Timeout>(),
+    }
+  ],
 })
 export class ApiEndpointModule {}
