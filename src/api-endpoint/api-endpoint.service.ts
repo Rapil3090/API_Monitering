@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
 import { UpdateApiEndpointDto } from './dto/update-api-endpoint.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,7 @@ import { ApiEndpoint } from './entities/api-endpoint.entity';
 import { Repository } from 'typeorm';
 import axios, { AxiosResponse } from 'axios';
 import { ApiResponse } from 'src/api-response/entities/api-response.entity';
+
 
 @Injectable()
 export class ApiEndpointService {
@@ -15,11 +16,12 @@ export class ApiEndpointService {
     private readonly apiEndpointRepository: Repository<ApiEndpoint>,
     @InjectRepository(ApiResponse)
     private readonly apiResponseRepository: Repository<ApiResponse>,
+    @Inject('TIMERS_MAP') private readonly timers: Map<number, NodeJS.Timeout>,
   ){}
 
   async create(createApiEndpointDto: CreateApiEndpointDto) {
 
-    const { url, parameters } = createApiEndpointDto;
+    const { url, parameters, callTime } = createApiEndpointDto;
 
     const existingUrl = await this.apiEndpointRepository.findOne({
       where: {
@@ -34,6 +36,7 @@ export class ApiEndpointService {
     const apiEndpoint = await this.apiEndpointRepository.create({
       url,
       parameters,
+      callTime,
     });
 
     await this.apiEndpointRepository.save(apiEndpoint);
@@ -68,7 +71,7 @@ export class ApiEndpointService {
 
   async update(updateApiEndpointDto: UpdateApiEndpointDto) {
 
-    const { id, url, parameters }  = updateApiEndpointDto;
+    const { id, url, parameters, callTime }  = updateApiEndpointDto;
 
     const apiEndpoint = await this.apiEndpointRepository.findOne({
       where: {
@@ -91,6 +94,7 @@ export class ApiEndpointService {
     }, {
       url,
       parameters,
+      callTime,
     });
 
     const newApiEndpoint = await this.apiEndpointRepository.findOne({
@@ -119,49 +123,69 @@ export class ApiEndpointService {
     return 'ok';
   }
 
-  async sendApiRequest () {
-    
-    const apiEndpoint = await this.apiEndpointRepository.find();
+  async sendApiRequest (apiEndpoint: ApiEndpoint) {
 
-    console.log(apiEndpoint);
+    const url = apiEndpoint.url;
+    const parameters = apiEndpoint.parameters;
+    const startTime = Date.now();
 
-    for (const endpoint of apiEndpoint) {
-      const url = endpoint.url;
-      const parameters = endpoint.parameters;
-      const startTime = Date.now();
+    const response : AxiosResponse = await axios.get(url, {
+      params: parameters.reduce((acc, param) => {
+        if(param.type.toLowerCase() === 'query') {
+          acc[param.key] = param.value;
+        }
+        return acc;
+      }, {}),
 
-      const response : AxiosResponse = await axios.get(url, {
-        params: parameters.reduce((acc, param) => {
-          if(param.type.toLowerCase() === 'query') {
-            acc[param.key] = param.value;
-          }
-          return acc;
-        }, {}),
+      headers: parameters.reduce((acc, param) => {
+        if (param.type.toLowerCase() === 'header') {
+          acc[param.key] = param.value;
+        }
+        return acc;
+      }, {})
+    });
 
-        headers: parameters.reduce((acc, param) => {
-          if (param.type.toLowerCase() === 'header') {
-            acc[param.key] = param.value;
-          }
-          return acc;
-        }, {})
-      });
+    const responseTime = Date.now() - startTime;
+    const apiRespones = {
+      responseTime,
+      body: response.data.substring(0, 255),
+      statusCode: response.status,
+      success: true
+    };
 
-      const responseTime = Date.now() - startTime;
-      const apiRespones = {
-        responseTime,
-        body: response.data.substring(0, 255),
-        statusCode: response.status,
-        success: true
-      };
+    await this.apiResponseRepository.save(apiRespones);
 
-      await this.apiResponseRepository.save(apiRespones);
+    return apiRespones;
+  };
 
-      return apiRespones;
-      
-    }
+  async scheduledApiCall() : Promise<void> {
 
+    const apiEndpoints = await this.apiEndpointRepository.find();
 
-    
-    
+    apiEndpoints.forEach(apiEndpoint => {
+
+      if (this.timers.has(apiEndpoint.id)) {
+        console.log(`이미 실행중인 타이머가 있습니다. (${apiEndpoint.url}, id${apiEndpoint.id})`);
+        return;
+      }
+
+      const timer = setInterval(() => {
+        this.sendApiRequest(apiEndpoint)
+        .then(response => console.log('응답', response))
+        .catch(error => console.log('에러', error.message));
+      }, apiEndpoint.callTime);
+
+      this.timers.set(apiEndpoint.id, timer);
+    });
+  };
+
+  stopAllTimer() {
+    this.timers.forEach((timer, id) => {
+      clearInterval(timer);
+    });
+    this.timers.clear();
   }
+
+
+
 }

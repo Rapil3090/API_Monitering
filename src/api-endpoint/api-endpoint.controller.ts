@@ -34,6 +34,11 @@ export class ApiEndpointController {
 
   @Get('/test/test')
   test() {
-    return this.apiEndpointService.sendApiRequest();
+    return this.apiEndpointService.scheduledApiCall();
+  }
+
+  @Get('/test/apicallstop')
+  apiCallStop() {
+    return this.apiEndpointService.stopAllTimer();
   }
 }
