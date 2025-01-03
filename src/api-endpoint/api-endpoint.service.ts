@@ -135,13 +135,13 @@ export class ApiEndpointService {
       try {
         const response: AxiosResponse = await axios.get(url, {
           params: parameters.reduce((acc, param) => {
-            if (param.type && typeof param.type === 'string' && param.type.toLowerCase() === 'query') {
+            if (param.type.toLowerCase() === 'query') {
               acc[param.key] = param.value;
             }
             return acc;
           }, {}),
           headers: parameters.reduce((acc, param) => {
-            if (param.type && typeof param.type === 'string' && param.type.toLowerCase() === 'header') {
+            if (param.type.toLowerCase() === 'header') {
               acc[param.key] = param.value;
             }
             return acc;
