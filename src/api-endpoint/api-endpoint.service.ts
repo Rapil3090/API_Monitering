@@ -205,19 +205,6 @@ export class ApiEndpointService {
     this.timers.clear();
   };
 
-  async retryRequest(apiEndpoint: ApiEndpoint, retries = 3) {
-
-    for (let i = 1; i <= retries; i++) {
-
-      try {
-        return await this.sendApiRequest(apiEndpoint);
-      } catch (error) {
-        if (i === retries) {
-          throw new RequestTimeoutException(`${apiEndpoint.url} 의 요청이 실패하였습니다. ID: ${apiEndpoint.id} `);
-        };
-      };
-    };
-  };
   
 
 
