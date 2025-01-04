@@ -166,12 +166,26 @@ export class ApiEndpointService {
         if (error.response && error.response.status === 500) {
           console.warn(`HTTP 500 에러 발생. 재시도 중 (${i}/${retries})`);
           
+          console.log('----------');
+          console.log(error);
+
           if (i === retries) {
             console.error(`최대 재시도 횟수 초과: ${apiEndpoint.url}`);
-            throw new RequestTimeoutException(
+
+          const apiResponse = {
+          responseTime: 5000,
+          statusCode: 1300 ,
+          body: '요청 및 재시도 실패',
+          success: false,
+          };
+
+          await this.apiResponseRepository.save(apiResponse);
+
+            console.log(
               `${apiEndpoint.url} 의 요청이 실패하였습니다. ID: ${apiEndpoint.id}`
             );
           }
+
           continue;
         }
       }}
@@ -205,7 +219,9 @@ export class ApiEndpointService {
     this.timers.clear();
   };
 
-  
+  /**
+   * 
+   */
 
 
 }
