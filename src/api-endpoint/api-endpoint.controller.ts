@@ -19,7 +19,7 @@ export class ApiEndpointController {
 
   @Get(':id')
   findByUrl(@Param('id') id: number) {
-    return this.apiEndpointService.findByUrl(id);
+    return this.apiEndpointService.findById(id);
   }
 
   @Patch()

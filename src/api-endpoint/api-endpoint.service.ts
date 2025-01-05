@@ -54,19 +54,19 @@ export class ApiEndpointService {
     return this.apiEndpointRepository.find();
   }
 
-  async findByUrl(id: number) {
+  async findById(id: number) {
     
-    const existsByUrl= await this.apiEndpointRepository.findOne({
+    const existsById= await this.apiEndpointRepository.findOne({
       where: {
         id,
       },
     });
 
-    if (!existsByUrl) {
+    if (!existsById) {
       throw new NotFoundException(`해당 ${id}이 저장되어 있지 않습니다.`)
     };
 
-    return existsByUrl;
+    return existsById;
   }
 
   async update(updateApiEndpointDto: UpdateApiEndpointDto) {
