@@ -218,7 +218,6 @@ export class ApiEndpointService {
 
   async scheduledApiCall(): Promise<void> {
     const apiEndpoints = await this.apiEndpointRepository.find();
-
     apiEndpoints.forEach((apiEndpoint) => {
       // 타이머를 왜 만든건지?
       // 일정 주기로 실행되게 하고싶으면 cronjob 사용(추가된 모듈 확인)
