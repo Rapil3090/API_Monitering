@@ -4,6 +4,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ApiEndpoint } from './entities/api-endpoint.entity';
 import { ApiResponse } from 'src/api-response/entities/api-response.entity';
 import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
+import { async } from 'rxjs';
+import { BadRequestException } from '@nestjs/common';
 
 const mockApiEndpointRepository = {
   create: jest.fn(),
@@ -81,6 +83,35 @@ describe('create', () => {
     expect(mockApiEndpointRepository.create).toHaveBeenCalledWith(createApiEndpointDto);
     expect(mockApiEndpointRepository.save).toHaveBeenCalledWith(result);
   });
+
+  it('이미 저장된 url로 생성요청했을때 실패', async() => {
+
+    const createApiEndpointDto : CreateApiEndpointDto = { 
+      url: 'test@test.com',
+      parameters: [
+        {"type" : "query", "key" : "pageNo", "value" : "1"},
+        {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+      ],
+      callTime: 5000
+    };
+
+    jest.spyOn(mockApiEndpointRepository, 'findOne').mockResolvedValue({
+      id: 1,
+      url: createApiEndpointDto.url,
+      parameters: createApiEndpointDto.parameters,
+      callTime: createApiEndpointDto.callTime,
+    });
+
+    await expect(apiEndpointService.create(createApiEndpointDto)).rejects.toThrow(BadRequestException);
+    await expect(apiEndpointService.create(createApiEndpointDto)).rejects.toThrow(new BadRequestException(`이미 저장된 url입니다. ${createApiEndpointDto.url}`));
+    expect(mockApiEndpointRepository.findOne).toHaveBeenCalledWith({
+      where: {
+        url: createApiEndpointDto.url,
+      },
+    });
+  });
+
+  
 
 
 })
