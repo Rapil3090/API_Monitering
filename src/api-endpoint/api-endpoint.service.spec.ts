@@ -110,10 +110,39 @@ describe('create', () => {
       },
     });
   });
+});
 
-  
+describe('getAllEndpoints', () => {
+  it('모든 endpoint 조회', async () => {
+    
+    const endpoints = [
+      { id: 1,  
+        url: 'test@test.com',
+      parameters: [
+        {"type" : "query", "key" : "pageNo", "value" : "1"},
+        {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+      ],
+      callTime: 5000 },
+      {
+        id: 2,
+        url: 'test2@test.com',
+        parameters: [
+          {"type" : "query", "key" : "pageNo", "value" : "1"},
+          {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+        ],
+        callTime: 5000
+      },
+    ];
+
+    jest.spyOn(mockApiEndpointRepository, 'find').mockResolvedValue(endpoints);
+    
+    const result = await apiEndpointService.getAllEndpoints();
+
+    expect(result).toEqual(endpoints);
+    expect(mockApiEndpointRepository.find).toHaveBeenCalled();
+  });
+});
 
 
-})
 
 });
