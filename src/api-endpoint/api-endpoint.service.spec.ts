@@ -5,7 +5,7 @@ import { ApiEndpoint } from './entities/api-endpoint.entity';
 import { ApiResponse } from 'src/api-response/entities/api-response.entity';
 import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
 import { async } from 'rxjs';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 const mockApiEndpointRepository = {
   create: jest.fn(),
@@ -143,6 +143,49 @@ describe('getAllEndpoints', () => {
   });
 });
 
+  describe('findById', () => {
+    it('findById', async() => {
 
+      const endpoint = { 
+        id: 1,
+        url: 'test@test.com',
+        parameters: [
+          {"type" : "query", "key" : "pageNo", "value" : "1"},
+          {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+        ],
+        callTime: 5000
+      };
+      
+      jest.spyOn(mockApiEndpointRepository, 'findOne').mockResolvedValue(endpoint);
+
+      const result = await apiEndpointService.findById(1);
+
+      expect(result).toEqual(endpoint);
+      expect(result.url).toBe(endpoint.url);
+      expect(result.parameters).toHaveLength(2);
+      expect(mockApiEndpointRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+        }
+      });
+    });
+
+    it('저장되지 않은 id로 조회시 실패', async() => {
+
+      const id = 1;
+
+      jest.spyOn(mockApiEndpointRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(apiEndpointService.findById(1)).rejects.toThrow(NotFoundException);
+      expect(mockApiEndpointRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: id,
+        }
+      });
+      await expect(apiEndpointService.findById(1)).rejects.toThrow(
+        new NotFoundException(`해당 ${id}이 저장되어 있지 않습니다.`)
+      );
+    });
+  });
 
 });
