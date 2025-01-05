@@ -219,9 +219,5 @@ export class ApiEndpointService {
     this.timers.clear();
   };
 
-  /**
-   * 
-   */
-
 
 }
