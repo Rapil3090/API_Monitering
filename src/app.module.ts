@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApiEndpoint } from './api-endpoint/entities/api-endpoint.entity';
 import { ApiResponseModule } from './api-response/api-response.module';
 import { ApiResponse } from './api-response/entities/api-response.entity';
+import { CronjobModule } from './cronjob/cronjob.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ApiResponse } from './api-response/entities/api-response.entity';
     }),
     ApiEndpointModule,
     ApiResponseModule,
+    CronjobModule,
   ],
   controllers: [AppController],
   providers: [AppService],
