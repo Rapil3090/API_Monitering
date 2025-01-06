@@ -4,17 +4,21 @@ import { ApiEndpointController } from './api-endpoint.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApiEndpoint } from './entities/api-endpoint.entity';
 import { ApiResponse } from 'src/api-response/entities/api-response.entity';
+import { Cronjob } from 'src/cronjob/entities/cronjob.entity';
+import { CronjobService } from 'src/cronjob/cronjob.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       ApiEndpoint,
       ApiResponse,
+      Cronjob,
     ])
   ],
   controllers: [ApiEndpointController],
   providers: [
     ApiEndpointService,
+    CronjobService,
     {
       provide: 'TIMERS_MAP',
       useValue: new Map<number, NodeJS.Timeout>(),
