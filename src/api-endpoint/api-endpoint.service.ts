@@ -156,9 +156,10 @@ export class ApiEndpointService {
           success: true,
         };
 
-        await this.apiResponseRepository.save(apiResponse);
-        // 리턴을 DB에 저장한거 말고 만들어놓은 apiResponse를 리턴하는게 맞는지?
-        return apiResponse;
+        const savedApiResponse = await this.apiResponseRepository.save(apiResponse);
+        
+        return savedApiResponse;
+        
       } catch (error) {
         if (error.response && error.response.status === 500) {
           console.warn(`HTTP 500 에러 발생. 재시도 중 (${i}/${retries})`);
