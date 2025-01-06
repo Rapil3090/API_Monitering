@@ -93,14 +93,13 @@ export class ApiEndpointService {
       }
     );
 
-    // new~ 보다는 updated~ 가 더 맞는 표현아닌가?
-    const newApiEndpoint = await this.apiEndpointRepository.findOne({
+    const updatedApiEndpoint = await this.apiEndpointRepository.findOne({
       where: {
         id,
       },
     });
 
-    return newApiEndpoint;
+    return updatedApiEndpoint;
   }
 
   async remove(id: number) {
