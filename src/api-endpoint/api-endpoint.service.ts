@@ -36,18 +36,7 @@ export class ApiEndpointService {
       throw new BadRequestException(`이미 저장된 url입니다. ${url}`);
     }
 
-    // .create 함수는 무슨 기능인지?
-    // 리턴 타입은 무엇인지?
-    const apiEndpoint = await this.apiEndpointRepository.create({
-      url,
-      parameters,
-      callTime,
-    });
-
-    // .save 함수는 무슨 기능인지?
-    // 리턴 타입은 무엇인지?
-    // .create 함수와 차이점은 무엇인지?
-    await this.apiEndpointRepository.save(apiEndpoint);
+    await this.apiEndpointRepository.save(createApiEndpointDto);
 
     return await this.apiEndpointRepository.findOne({
       where: {
