@@ -161,20 +161,22 @@ export class ApiEndpointService {
         return savedApiResponse;
         
       } catch (error) {
-        if (error.response && error.response.status === 500) {
-          console.warn(`HTTP 500 에러 발생. 재시도 중 (${i}/${retries})`);
+        if (error.response.status >= 500 && error.response.status < 600) {
+          console.warn(`서버 에러 발생. 재시도 중 (${i}/${retries})`);
 
           console.log("----------");
           console.log(error);
 
           if (i === retries) {
             console.error(`최대 재시도 횟수 초과: ${apiEndpointDto.url}`);
+            
+            const  errorOccurredAt = new Date();
 
+            const elapsedTime = errorOccurredAt.getTime() - currentTime.getTime();
+            
             const apiResponse = {
-              responseTime: 5000,
-              // 5000 이라는 숫자는 무슨 의미인가?
-              statusCode: 1300,
-              // 1300 이라는 숫자는 무슨 의미인가?
+              responseTime: elapsedTime,
+              statusCode: error.response.status,
               body: "요청 및 재시도 실패",
               success: false,
             };
@@ -182,7 +184,7 @@ export class ApiEndpointService {
             await this.apiResponseRepository.save(apiResponse);
 
             console.log(
-              `${apiEndpointDto.url} 의 요청이 실패하였습니다. ID: ${apiEndpointDto.id}`
+              `${apiEndpointDto.url} 의 요청이 ${retries}회 실패하였습니다. ID: ${apiEndpointDto.id}`
             );
           }
 
