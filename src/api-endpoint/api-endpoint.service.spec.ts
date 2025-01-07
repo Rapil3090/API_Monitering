@@ -6,13 +6,15 @@ import { ApiResponse } from 'src/api-response/entities/api-response.entity';
 import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
 import { async } from 'rxjs';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { UpdateApiEndpointDto } from './dto/update-api-endpoint.dto';
 
 const mockApiEndpointRepository = {
   create: jest.fn(),
   findOne: jest.fn(),
   find: jest.fn(),
   delete: jest.fn(),
-  save: jest.fn()
+  save: jest.fn(),
+  update: jest.fn(),
 };
 
 const mockApiResponseRepository = {
@@ -68,7 +70,6 @@ describe('create', () => {
     jest.spyOn(mockApiEndpointRepository, 'findOne')
     .mockResolvedValueOnce(null)
     .mockResolvedValueOnce(result);
-    jest.spyOn(mockApiEndpointRepository, 'create').mockResolvedValue(result);
     jest.spyOn(mockApiEndpointRepository, 'save').mockResolvedValue(result);
     jest.spyOn(mockApiEndpointRepository, 'findOne').mockResolvedValue(result);
 
@@ -80,8 +81,7 @@ describe('create', () => {
         url: createApiEndpointDto.url,
       }
     });
-    expect(mockApiEndpointRepository.create).toHaveBeenCalledWith(createApiEndpointDto);
-    expect(mockApiEndpointRepository.save).toHaveBeenCalledWith(result);
+    expect(mockApiEndpointRepository.save).toHaveBeenCalledWith(createApiEndpointDto);
   });
 
   it('이미 저장된 url로 생성요청했을때 실패', async() => {
@@ -188,4 +188,83 @@ describe('getAllEndpoints', () => {
     });
   });
 
+  describe('update', () => {
+    it('업데이트 성공', async() => {
+
+      const apiEndpoint = { 
+        id: 1,
+        url: 'test@test.com',
+        parameters: [
+          {"type" : "query", "key" : "pageNo", "value" : "1"},
+          {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+        ],
+        callTime: 5000
+      };
+
+      const updateApiEndpointDto : UpdateApiEndpointDto = { 
+        id: 1,
+        url: 'test2@test.com',
+        parameters: [
+          {"type" : "query", "key" : "pageNo", "value" : "1"},
+          {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+        ],
+        callTime: 5000
+      };
+
+      jest.spyOn(mockApiEndpointRepository, 'findOne')
+      .mockResolvedValueOnce(apiEndpoint)
+      .mockResolvedValueOnce(updateApiEndpointDto);
+      jest.spyOn(mockApiEndpointRepository, 'update').mockResolvedValue(updateApiEndpointDto);
+      
+      const result = await apiEndpointService.update(updateApiEndpointDto);
+
+      expect(result).toEqual(updateApiEndpointDto);
+      expect(mockApiEndpointRepository.findOne)
+      .toHaveBeenCalledWith({where: { url: apiEndpoint.url, }});
+      expect(mockApiEndpointRepository.update).toHaveBeenCalledWith(
+        {id: apiEndpoint.id,}, 
+        {url:updateApiEndpointDto.url,
+         parameters: updateApiEndpointDto.parameters,
+         callTime: updateApiEndpointDto.callTime} );
+      expect(mockApiEndpointRepository.findOne).toHaveBeenCalledWith({
+        where: {id: apiEndpoint.id},
+      });
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('update시 중복된 url이 있을때 실패', async() => {
+
+      const updateRequest = { 
+        id: 1,
+        url: 'test@test.com',
+        parameters: [
+          {"type" : "query", "key" : "pageNo", "value" : "1"},
+          {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+        ],
+        callTime: 5000
+      };
+      
+      const existingApiEndpoint = { 
+        id: 2,
+        url: 'test@test.com',
+        parameters: [
+          {"type" : "query", "key" : "pageNo", "value" : "1"},
+          {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+        ],
+        callTime: 5000
+      };
+
+      jest.spyOn(mockApiEndpointRepository, 'findOne').mockResolvedValueOnce(existingApiEndpoint);
+
+      await expect(apiEndpointService.update(updateRequest)).rejects.toThrow(BadRequestException);
+      expect(mockApiEndpointRepository.findOne).toHaveBeenCalledWith({ where: { url: updateRequest.url }});
+      expect(mockApiEndpointRepository.update).not.toHaveBeenCalled();
+
+    });
+  });
+
+  
 });
