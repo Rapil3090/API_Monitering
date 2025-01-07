@@ -12,6 +12,7 @@ import { ApiEndpoint } from "./entities/api-endpoint.entity";
 import { Repository } from "typeorm";
 import axios, { AxiosResponse } from "axios";
 import { ApiResponse } from "src/api-response/entities/api-response.entity";
+import { RequestApiEndpointDto } from "./dto/request-api-endpoint.dto";
 
 @Injectable()
 export class ApiEndpointService {
@@ -118,18 +119,14 @@ export class ApiEndpointService {
     return "ok";
   }
 
-  // DTO를 엔티티로 받는게 맞는지?
-  async sendApiRequest(apiEndpoint: ApiEndpoint) {
-    const url = apiEndpoint.url;
-    const parameters = apiEndpoint.parameters;
-    // 이렇게 쓰는게 어떤지?
-    // const { url, parameters } = apiEndpoint;
+  async sendApiRequest(apiEndpointDto : RequestApiEndpointDto) {
+    const { url, parameters } = apiEndpointDto;
+
     const retries = 3;
 
     for (let i = 1; i <= retries; i++) {
-      const startTime = Date.now();
-      // 이렇게 쓰는게 어떤지?
-      // const currentTime = new Date();
+      const currentTime = new Date();
+
 
       try {
         const response: AxiosResponse = await axios.get(url, {
@@ -148,7 +145,9 @@ export class ApiEndpointService {
           }, {}),
         });
 
-        const responseTime = Date.now() - startTime;
+        const endTime = new Date();
+
+        const responseTime = endTime.getTime() - currentTime.getTime();
 
         const apiResponse = {
           responseTime,
@@ -157,24 +156,27 @@ export class ApiEndpointService {
           success: true,
         };
 
-        await this.apiResponseRepository.save(apiResponse);
-        // 리턴을 DB에 저장한거 말고 만들어놓은 apiResponse를 리턴하는게 맞는지?
-        return apiResponse;
+        const savedApiResponse = await this.apiResponseRepository.save(apiResponse);
+        
+        return savedApiResponse;
+        
       } catch (error) {
-        if (error.response && error.response.status === 500) {
-          console.warn(`HTTP 500 에러 발생. 재시도 중 (${i}/${retries})`);
+        if (error.response.status >= 500 && error.response.status < 600) {
+          console.warn(`서버 에러 발생. 재시도 중 (${i}/${retries})`);
 
           console.log("----------");
           console.log(error);
 
           if (i === retries) {
-            console.error(`최대 재시도 횟수 초과: ${apiEndpoint.url}`);
+            console.error(`최대 재시도 횟수 초과: ${apiEndpointDto.url}`);
+            
+            const  errorOccurredAt = new Date();
 
+            const elapsedTime = errorOccurredAt.getTime() - currentTime.getTime();
+            
             const apiResponse = {
-              responseTime: 5000,
-              // 5000 이라는 숫자는 무슨 의미인가?
-              statusCode: 1300,
-              // 1300 이라는 숫자는 무슨 의미인가?
+              responseTime: elapsedTime,
+              statusCode: error.response.status,
               body: "요청 및 재시도 실패",
               success: false,
             };
@@ -182,7 +184,7 @@ export class ApiEndpointService {
             await this.apiResponseRepository.save(apiResponse);
 
             console.log(
-              `${apiEndpoint.url} 의 요청이 실패하였습니다. ID: ${apiEndpoint.id}`
+              `${apiEndpointDto.url} 의 요청이 ${retries}회 실패하였습니다. ID: ${apiEndpointDto.id}`
             );
           }
 
