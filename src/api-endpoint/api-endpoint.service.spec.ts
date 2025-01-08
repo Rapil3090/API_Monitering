@@ -266,5 +266,45 @@ describe('getAllEndpoints', () => {
     });
   });
 
+
+  describe('remove', () => {
+    it('api 삭제 성공', async() =>{
+
+      const apiEndpoint = { 
+        id: 1,
+        url: 'test@test.com',
+        parameters: [
+          {"type" : "query", "key" : "pageNo", "value" : "1"},
+          {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+        ],
+        callTime: 5000
+      };
+      
+
+      jest.spyOn(mockApiEndpointRepository, 'findOne').mockResolvedValue(apiEndpoint);
+      jest.spyOn(mockApiEndpointRepository, 'delete').mockResolvedValue(undefined);
+      
+      const result = await apiEndpointService.remove(1);
+
+      expect(result).toEqual('ok');
+      expect(mockApiEndpointRepository.findOne).toHaveBeenCalledWith({ where: { id:1 }});
+      expect(mockApiEndpointRepository.delete).toHaveBeenCalled();
+
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('삭제 요청시 id 존재 여부 확인', async() => {
+
+      jest.spyOn(mockApiEndpointRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(apiEndpointService.remove(1)).rejects.toThrow(NotFoundException);
+      expect(mockApiEndpointRepository.findOne).toHaveBeenCalledWith({ where: { id: 1,}});
+      expect(mockApiEndpointRepository.delete).not.toHaveBeenCalled();
+
+    })
+  });
   
 });
