@@ -7,6 +7,8 @@ import { CreateApiEndpointDto } from './dto/create-api-endpoint.dto';
 import { async } from 'rxjs';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UpdateApiEndpointDto } from './dto/update-api-endpoint.dto';
+import { RequestApiEndpointDto } from './dto/request-api-endpoint.dto';
+import axios from 'axios';
 
 const mockApiEndpointRepository = {
   create: jest.fn(),
@@ -22,6 +24,9 @@ const mockApiResponseRepository = {
 };
 
 const mockTimersMap = new Map<number, NodeJS.Timeout>();
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('ApiEndpointService', () => {
   let apiEndpointService: ApiEndpointService;
@@ -307,4 +312,63 @@ describe('getAllEndpoints', () => {
     })
   });
   
+
+  describe('sendApiRequest', () => {
+    it('sendApiRequest 요청 성공', async() => {
+
+      const apiEndpointDto: RequestApiEndpointDto = {
+        id : 1,
+        url: 'test@test.com',
+        parameters: [
+        {"type" : "query", "key" : "pageNo", "value" : "1"},
+      ],
+        callTime: 5000,
+      };
+
+      mockedAxios.get.mockResolvedValueOnce({
+        data: 'Successful response data',
+      status: 200,
+      });
+
+      const result = await apiEndpointService.sendApiRequest(apiEndpointDto);
+      
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        apiEndpointDto.url,
+        { params: { pageNo : '1'},
+          headers : {},
+        },
+      );
+      
+      expect(mockApiResponseRepository.save).toHaveBeenCalledWith({
+        responseTime: expect.any(Number),
+        body: 'Successful response data'.substring(0, 255),
+        statusCode: 200,
+        success: true,
+      });
+    }); 
+
+    it('sendApiRequest 실패', async() => {
+
+      const apiEndpointDto: RequestApiEndpointDto = {
+        id : 1,
+        url: 'test@test.com',
+        parameters: [
+        {"type" : "query", "key" : "pageNo", "value" : "1"},
+      ],
+        callTime: 5000,
+      };
+
+      mockedAxios.get.mockRejectedValue({ response: { status: 500}});
+
+      await apiEndpointService.sendApiRequest(apiEndpointDto);
+
+      expect(mockApiResponseRepository.save).toHaveBeenCalledWith({
+        responseTime: expect.any(Number),
+        statusCode: 500,
+        body: '요청 및 재시도 실패',
+        success: false,
+      });
+    });
+
+  })
 });
