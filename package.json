@@ -18,8 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:apiendpoint": "jest --testPathPattern=src/api-endpoint",
-    "test:apiendpoint:watch": "jest --watch --testPathPattern=src/api-endpoint"
+    "test:apiendpoint": "jest --testPathPattern=src/api-endpoint --coverage",
+    "test:apiendpoint:watch": "jest --watch --testPathPattern=src/api-endpoint --coverage"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
