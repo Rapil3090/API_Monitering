@@ -37,11 +37,6 @@ export class ApiEndpointController {
     return this.apiEndpointService.scheduledApiCall();
   }
 
-  @Get('/test/apicallstop')
-  apiCallStop() {
-    return this.apiEndpointService.stopAllTimer();
-  }
-
   @Get('/test/500')
   triggerError() {
     throw new InternalServerErrorException('의도적으로 발생시킴')
