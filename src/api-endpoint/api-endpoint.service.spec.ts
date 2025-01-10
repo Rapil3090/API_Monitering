@@ -115,6 +115,34 @@ describe('create', () => {
       },
     });
   });
+  
+  it('parameters 미입력시 에러', async() => {
+
+    const createApiEndpointDto : CreateApiEndpointDto = { 
+      url: 'test@test.com',
+      parameters: null,
+      callTime: 5000
+    };
+
+    await expect(apiEndpointService.create(createApiEndpointDto))
+    .rejects.toThrow(BadRequestException);
+  });
+
+  it('callTime 미입력시 에러', async() => {
+
+    const createApiEndpointDto : CreateApiEndpointDto = { 
+      url: 'test@test.com',
+      parameters: [
+        {"type" : "query", "key" : "pageNo", "value" : "1"},
+        {"type" : "apiKey", "key" : "serviceKey", "value" : "R3fWxDee7P9ysC5ty+6Y7LbJyFTiH0ToWmOtlRCJVUdWYd1kAkDzzTS9RA6Mn8Ikq0GYE1eEu462kax9JgnaNw=="}
+      ],
+      callTime: -1000,
+    };
+
+    await expect(apiEndpointService.create(createApiEndpointDto))
+    .rejects.toThrow(BadRequestException);
+  });
+
 });
 
 describe('getAllEndpoints', () => {
@@ -422,7 +450,8 @@ describe('getAllEndpoints', () => {
       consoleWarnSpy.mockRestore();
       consoleErrorSpy.mockRestore();
 
-    })
+    });
+  });
 
-  })
+
 });
