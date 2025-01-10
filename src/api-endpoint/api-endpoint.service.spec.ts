@@ -347,13 +347,36 @@ describe('getAllEndpoints', () => {
       });
     }); 
 
-    it('sendApiRequest 실패', async() => {
+    it('sendApiRequest query 실패', async() => {
 
       const apiEndpointDto: RequestApiEndpointDto = {
         id : 1,
         url: 'test@test.com',
         parameters: [
         {"type" : "query", "key" : "pageNo", "value" : "1"},
+      ],
+        callTime: 5000,
+      };
+
+      mockedAxios.get.mockRejectedValue({ response: { status: 500}});
+
+      await apiEndpointService.sendApiRequest(apiEndpointDto);
+
+      expect(mockApiResponseRepository.save).toHaveBeenCalledWith({
+        responseTime: expect.any(Number),
+        statusCode: 500,
+        body: '요청 및 재시도 실패',
+        success: false,
+      });
+    });
+
+    it('sendApiRequest header 실패', async() => {
+
+      const apiEndpointDto: RequestApiEndpointDto = {
+        id : 1,
+        url: 'test@test.com',
+        parameters: [
+        {"type" : "header", "key" : "pageNo", "value" : "1"},
       ],
         callTime: 5000,
       };
