@@ -453,5 +453,58 @@ describe('getAllEndpoints', () => {
     });
   });
 
+  describe('scheduledApiCall', () => {
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+      jest.clearAllTimers();
+    });
+
+    it('scheduledApiCall 성공', async() => {
+
+      const apiEndpoints = [
+        {  id : 1,
+        url: 'test@test.com',
+        parameters: [{"type" : "header", "key" : "pageNo", "value" : "1"},],
+        callTime: 5000,},
+        {  id : 2,
+        url: 'test@test.com',
+        parameters: [{"type" : "header", "key" : "pageNo", "value" : "1"},],
+        callTime: 5000,},
+      ];
+
+      jest.spyOn(mockApiEndpointRepository, 'find').mockResolvedValue(apiEndpoints);
+      jest.spyOn(apiEndpointService, 'sendApiRequest').mockResolvedValue({
+        id: 1,
+        responseTime: 123,
+        body: 'Successful response data'.substring(0, 255),
+        statusCode: 200,
+        success: true,
+      });
+
+      await apiEndpointService.scheduledApiCall();
+
+      expect(mockTimersMap.size).toBe(2);
+      expect(mockTimersMap.has(1)).toBe(true);
+      expect(mockTimersMap.has(2)).toBe(true);
+
+      jest.advanceTimersByTime(5000);
+      await Promise.resolve();
+
+      expect(apiEndpointService.sendApiRequest).toHaveBeenCalledWith(apiEndpoints[0]);
+      
+      jest.advanceTimersByTime(5000);
+      await Promise.resolve();
+
+      expect(apiEndpointService.sendApiRequest).toHaveBeenCalledWith(apiEndpoints[1]);
+
+
+    });
+  });
+
 
 });
