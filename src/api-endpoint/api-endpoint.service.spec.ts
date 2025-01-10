@@ -393,5 +393,36 @@ describe('getAllEndpoints', () => {
       });
     });
 
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('sendApiRequest 실패시 재시도', async () => {
+
+      const apiEndpointDto: RequestApiEndpointDto = {
+        id : 1,
+        url: 'test@test.com',
+        parameters: [
+        {"type" : "header", "key" : "pageNo", "value" : "1"},
+      ],
+        callTime: 5000,
+      };
+
+      mockedAxios.get.mockRejectedValue({response: { status: 500}});
+
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      await apiEndpointService.sendApiRequest(apiEndpointDto);
+
+      expect(mockedAxios.get).toHaveBeenCalledTimes(3);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('서버 에러 발생'));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining(`최대 재시도 횟수 초과: ${apiEndpointDto.url}`));
+
+      consoleWarnSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+
+    })
+
   })
 });
