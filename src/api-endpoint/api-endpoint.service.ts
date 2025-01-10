@@ -67,12 +67,6 @@ export class ApiEndpointService {
   async update(updateApiEndpointDto: UpdateApiEndpointDto) {
     const { id, url, parameters, callTime } = updateApiEndpointDto;
 
-    const apiEndpoint = await this.apiEndpointRepository.findOne({
-      where: {
-        id,
-      },
-    });
-
     const existingEndpoint = await this.apiEndpointRepository.findOne({
       where: {
         url,
