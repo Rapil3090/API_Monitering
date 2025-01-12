@@ -13,12 +13,13 @@ import { Repository } from "typeorm";
 import axios, { AxiosResponse } from "axios";
 import { ApiResponse } from "src/api-response/entities/api-response.entity";
 import { RequestApiEndpointDto } from "./dto/request-api-endpoint.dto";
+import { ApiEndpointRepository } from "./repository/api-endpoint.repository";
 
 @Injectable()
 export class ApiEndpointService {
   constructor(
     @InjectRepository(ApiEndpoint)
-    private readonly apiEndpointRepository: Repository<ApiEndpoint>,
+    private readonly apiEndpointRepository: ApiEndpointRepository,
     @InjectRepository(ApiResponse)
     private readonly apiResponseRepository: Repository<ApiResponse>,
     @Inject("TIMERS_MAP") private readonly timers: Map<number, NodeJS.Timeout>
