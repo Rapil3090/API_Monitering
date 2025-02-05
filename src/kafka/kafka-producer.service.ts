@@ -1,22 +1,28 @@
-import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ClientKafka } from "@nestjs/microservices";
-import { firstValueFrom } from "rxjs";
+import { lastValueFrom } from "rxjs";
 
 @Injectable()
-export class KafkaProducerService implements OnModuleInit {
+export class KafkaProducerService {
     constructor(
         @Inject('KAFKA_SERVICE')
         private readonly kafkaClient: ClientKafka,
         ) {}
 
-        async onModuleInit() {
+        async onModuleInit(): Promise<void> {
+            const topics = ['response'];
+            topics.forEach((topic) => this.kafkaClient.subscribeToResponseOf(topic));
             await this.kafkaClient.connect();
         }
 
-        async sendMessage(topic: string, message: any) {
-            await firstValueFrom(this.kafkaClient.emit(topic, JSON.stringify(message)));
+        async onModuleDestroy(): Promise<void> {
+            await this.kafkaClient.close();
+        }
 
-            console.log('프로듀서 전송 완료');
+        async sendMessage(topic: string, message: any): Promise<void> {
+
+            const serializedMessage = JSON.stringify(message);
+            await lastValueFrom(this.kafkaClient.send<any>(topic, serializedMessage));
         }
 
 }

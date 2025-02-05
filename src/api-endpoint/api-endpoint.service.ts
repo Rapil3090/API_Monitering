@@ -3,13 +3,11 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  RequestTimeoutException,
 } from "@nestjs/common";
 import { CreateApiEndpointDto } from "./dto/create-api-endpoint.dto";
 import { UpdateApiEndpointDto } from "./dto/update-api-endpoint.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ApiEndpoint } from "./entities/api-endpoint.entity";
-import { Repository } from "typeorm";
 import axios, { AxiosResponse } from "axios";
 import { ApiResponse } from "src/api-response/entities/api-response.entity";
 import { RequestApiEndpointDto } from "./dto/request-api-endpoint.dto";
@@ -155,8 +153,6 @@ export class ApiEndpointService {
         };
 
         await this.kafkaProducerService.sendMessage('response', apiResponse);
-
-        // const savedApiResponse = await this.apiResponseRepository.save(apiResponse);
         
         return apiResponse;
         
@@ -181,9 +177,7 @@ export class ApiEndpointService {
               success: false,
             };
 
-            // await this.apiResponseRepository.save(apiResponse);
             await this.kafkaProducerService.sendMessage('response', apiResponse);
-
             // console.log(
             //   `${apiEndpointDto.url} 의 요청이 ${retries}회 실패하였습니다. ID: ${apiEndpointDto.id}`
             // );
@@ -199,16 +193,11 @@ export class ApiEndpointService {
     const apiEndpoints = await this.apiEndpointRepository.find();
     apiEndpoints.forEach((apiEndpoint) => {
       if (this.timers.has(apiEndpoint.id)) {
-        // console.log(
-        //   `이미 실행중인 타이머가 있습니다. (${apiEndpoint.url}, id${apiEndpoint.id})`
-        // );
         return;
       }
 
       const timer = setInterval(() => {
         this.sendApiRequest(apiEndpoint)
-          // .then((response) => console.log("응답", response))
-          // .catch((error) => console.log("에러", error.message));
       }, apiEndpoint.callTime);
 
       this.timers.set(apiEndpoint.id, timer);

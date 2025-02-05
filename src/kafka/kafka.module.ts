@@ -1,10 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ClientsModule, Transport } from "@nestjs/microservices";
-import { kafkaConfig } from "src/config/kafka.config";
-import { KafkaConsumerService } from "./kafka-consumer.service";
 import { KafkaProducerService } from "./kafka-producer.service";
-import { ApiEndpointModule } from "src/api-endpoint/api-endpoint.module";
 import { ApiResponseRepository } from "src/api-response/repository/api-response.repository";
+import { KafkaController } from "./kafka.controller";
 
 @Module({
     imports: [
@@ -14,24 +12,24 @@ import { ApiResponseRepository } from "src/api-response/repository/api-response.
                 transport: Transport.KAFKA,
                 options: {
                     client: {
-                        clientId: 'nestjs-kafka-client',
+                        clientId: 'new-kafka',
                         brokers: ['localhost:9092'],
                     },
                     consumer: {
-                        groupId: 'nestjs-consumer-group',
-                        allowAutoTopicCreation: true,
+                        groupId: 'new-consumer',
                     }
                 }
             },
         ]),
     ],
+    controllers: [
+        KafkaController,
+    ],
     providers: [
-        KafkaConsumerService,
         KafkaProducerService,
         ApiResponseRepository,
     ],
     exports: [
-        KafkaConsumerService,
         KafkaProducerService,
     ],
 })

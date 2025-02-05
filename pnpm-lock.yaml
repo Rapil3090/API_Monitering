@@ -47,6 +47,9 @@ importers:
       kafkajs:
         specifier: ^2.2.4
         version: 2.2.4
+      microservice:
+        specifier: ^0.1.0
+        version: 0.1.0
       pg:
         specifier: ^8.13.1
         version: 8.13.1
@@ -1643,6 +1646,9 @@ packages:
     resolution: {integrity: sha512-ts6Wi+2j3jQjqi70w5AlN8DFnkSwC+MqmxEzdEALB2qXZYV3X/b1CTfgPLGJNMeAWxdPfU8FO1ms3NUfaHCPYg==}
     engines: {node: '>=10'}
 
+  gex@0.1.4:
+    resolution: {integrity: sha512-R1pYTfBFDh4/C+PCt6rUFW7wcG6yZAqs1YDJ0zBODU/qoTzf9DqPDj0RmWKX+kfsB0mrFB9uj9rpzy9asXVTWQ==}
+
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
@@ -2073,6 +2079,10 @@ packages:
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
+  lodash@2.4.1:
+    resolution: {integrity: sha512-qa6QqjA9jJB4AYw+NpD2GI4dzHL6Mv0hL+By6iIul4Ce0C1refrjZJmcGvWdnLUwl4LIPtvzje3UQfGH+nCEsQ==}
+    engines: {'0': node, '1': rhino}
+
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
 
@@ -2133,6 +2143,9 @@ packages:
   micromatch@4.0.8:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
+
+  microservice@0.1.0:
+    resolution: {integrity: sha512-W5ihTZ158Y/8wPyKn5Dic4Os1A5kClpjcvMSGXAdOb7RWiR/y57Z4m3FM3p4TaUybJ89yc8SJJ1Dp0yTJXMgSw==}
 
   mime-db@1.52.0:
     resolution: {integrity: sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==}
@@ -2345,6 +2358,9 @@ packages:
   path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
+
+  patrun@0.2.0:
+    resolution: {integrity: sha512-2CN/4rDM9juMayGNxmgdjE5AcOdyfO0FTYj3e2OjoDVQ2/QsukrXWyCrJmcr53AnuiTupXCMQh8C5fgv9d3E5A==}
 
   pg-cloudflare@1.1.1:
     resolution: {integrity: sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q==}
@@ -2960,6 +2976,9 @@ packages:
   uid@2.0.2:
     resolution: {integrity: sha512-u3xV3X7uzvi5b1MncmZo3i2Aw222Zk1keqLA1YkHldREkAhAqi65wuPfe7lHx8H/Wzy+8CE7S7uS3jekIM5s8g==}
     engines: {node: '>=8'}
+
+  underscore@1.6.0:
+    resolution: {integrity: sha512-z4o1fvKUojIWh9XuaVLUDdf86RQiq13AC1dmHbTpoyuu+bquHms76v16CjycCbec87J7z0k//SiQVk0sMdFmpQ==}
 
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
@@ -4920,6 +4939,10 @@ snapshots:
 
   get-stream@6.0.1: {}
 
+  gex@0.1.4:
+    dependencies:
+      underscore: 1.6.0
+
   glob-parent@5.1.2:
     dependencies:
       is-glob: 4.0.3
@@ -5536,6 +5559,8 @@ snapshots:
 
   lodash.merge@4.6.2: {}
 
+  lodash@2.4.1: {}
+
   lodash@4.17.21: {}
 
   log-symbols@4.1.0:
@@ -5585,6 +5610,11 @@ snapshots:
     dependencies:
       braces: 3.0.3
       picomatch: 2.3.1
+
+  microservice@0.1.0:
+    dependencies:
+      lodash: 2.4.1
+      patrun: 0.2.0
 
   mime-db@1.52.0: {}
 
@@ -5768,6 +5798,11 @@ snapshots:
   path-to-regexp@3.3.0: {}
 
   path-type@4.0.0: {}
+
+  patrun@0.2.0:
+    dependencies:
+      gex: 0.1.4
+      underscore: 1.6.0
 
   pg-cloudflare@1.1.1:
     optional: true
@@ -6332,6 +6367,8 @@ snapshots:
   uid@2.0.2:
     dependencies:
       '@lukeed/csprng': 1.1.0
+
+  underscore@1.6.0: {}
 
   undici-types@6.19.8: {}
 
