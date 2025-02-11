@@ -5,13 +5,15 @@ import { ApiEndpoint } from "src/api-endpoint/entities/api-endpoint.entity";
 import { ApiEndpointService } from "src/api-endpoint/api-endpoint.service";
 import { ApiResponseService } from "src/api-response/api-response.service";
 import { ApiResponse } from "src/api-response/entities/api-response.entity";
+import { KafkaModule } from "src/kafka/kafka.module";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       ApiEndpoint,
-      ApiResponse,
-    ])
+      ApiResponse,  
+    ]),
+    KafkaModule,
   ],
   providers: [
     CronjobService,

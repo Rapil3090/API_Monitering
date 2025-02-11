@@ -3,17 +3,17 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  RequestTimeoutException,
 } from "@nestjs/common";
 import { CreateApiEndpointDto } from "./dto/create-api-endpoint.dto";
 import { UpdateApiEndpointDto } from "./dto/update-api-endpoint.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ApiEndpoint } from "./entities/api-endpoint.entity";
-import { Repository } from "typeorm";
 import axios, { AxiosResponse } from "axios";
 import { ApiResponse } from "src/api-response/entities/api-response.entity";
 import { RequestApiEndpointDto } from "./dto/request-api-endpoint.dto";
 import { ApiEndpointRepository } from "./repository/api-endpoint.repository";
+import { KafkaProducerService } from "src/kafka/kafka-producer.service";
+import { ApiResponseRepository } from "src/api-response/repository/api-response.repository";
 
 @Injectable()
 export class ApiEndpointService {
@@ -21,8 +21,9 @@ export class ApiEndpointService {
     @InjectRepository(ApiEndpoint)
     private readonly apiEndpointRepository: ApiEndpointRepository,
     @InjectRepository(ApiResponse)
-    private readonly apiResponseRepository: Repository<ApiResponse>,
-    @Inject("TIMERS_MAP") private readonly timers: Map<number, NodeJS.Timeout>
+    private readonly apiResponseRepository: ApiResponseRepository,
+    @Inject("TIMERS_MAP") private readonly timers: Map<number, NodeJS.Timeout>,
+    private readonly kafkaProducerService: KafkaProducerService,
   ) {}
 
   async create(createApiEndpointDto: CreateApiEndpointDto) {
@@ -151,19 +152,19 @@ export class ApiEndpointService {
           success: true,
         };
 
-        const savedApiResponse = await this.apiResponseRepository.save(apiResponse);
+        await this.kafkaProducerService.sendMessage('response', apiResponse);
         
-        return savedApiResponse;
+        return apiResponse;
         
       } catch (error) {
         if (error.response.status >= 500 && error.response.status < 600) {
-          console.warn(`서버 에러 발생. 재시도 중 (${i}/${retries})`);
+          // console.warn(`서버 에러 발생. 재시도 중 (${i}/${retries})`);
 
-          console.log("----------");
-          console.log(error);
+          // console.log("----------");
+          // console.log(error);
 
           if (i === retries) {
-            console.error(`최대 재시도 횟수 초과: ${apiEndpointDto.url}`);
+            // console.error(`최대 재시도 횟수 초과: ${apiEndpointDto.url}`);
             
             const  errorOccurredAt = new Date();
 
@@ -176,11 +177,10 @@ export class ApiEndpointService {
               success: false,
             };
 
-            await this.apiResponseRepository.save(apiResponse);
-
-            console.log(
-              `${apiEndpointDto.url} 의 요청이 ${retries}회 실패하였습니다. ID: ${apiEndpointDto.id}`
-            );
+            await this.kafkaProducerService.sendMessage('response', apiResponse);
+            // console.log(
+            //   `${apiEndpointDto.url} 의 요청이 ${retries}회 실패하였습니다. ID: ${apiEndpointDto.id}`
+            // );
           }
 
           continue;
@@ -193,16 +193,11 @@ export class ApiEndpointService {
     const apiEndpoints = await this.apiEndpointRepository.find();
     apiEndpoints.forEach((apiEndpoint) => {
       if (this.timers.has(apiEndpoint.id)) {
-        console.log(
-          `이미 실행중인 타이머가 있습니다. (${apiEndpoint.url}, id${apiEndpoint.id})`
-        );
         return;
       }
 
       const timer = setInterval(() => {
         this.sendApiRequest(apiEndpoint)
-          .then((response) => console.log("응답", response))
-          .catch((error) => console.log("에러", error.message));
       }, apiEndpoint.callTime);
 
       this.timers.set(apiEndpoint.id, timer);
