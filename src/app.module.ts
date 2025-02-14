@@ -10,6 +10,16 @@ import { ApiResponseModule } from './api-response/api-response.module';
 import { ApiResponse } from './api-response/entities/api-response.entity';
 import { CronjobModule } from './cronjob/cronjob.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { HeaderQuery } from './api-endpoint/entities/header-query.entity';
+import { Parameter } from './api-endpoint/entities/parameter.entity';
+import { RequestCount } from './api-endpoint/entities/request-count.entity';
+import { ServiceKey } from './api-endpoint/entities/servicekey.entity';
+import { Url } from './api-endpoint/entities/url.entity';
+import { RequestInterval } from './api-response/entities/request-interval.entity';
+import { ResponseBody } from './api-response/entities/response-body.entity';
+import { ResponseTime } from './api-response/entities/response-time.entity';
+import { StatusCode } from './api-response/entities/status-code.entity';
+import { SuccessStatus } from './api-response/entities/success-status.entity';
 
 @Module({
   imports: [
@@ -36,6 +46,16 @@ import { ScheduleModule } from '@nestjs/schedule';
         entities: [
           ApiEndpoint,
           ApiResponse,
+          HeaderQuery,
+          Parameter,
+          RequestCount,
+          ServiceKey,
+          Url,
+          RequestInterval,
+          ResponseBody,
+          ResponseTime,
+          StatusCode,
+          SuccessStatus,
         ],
         synchronize: true,
       }),
