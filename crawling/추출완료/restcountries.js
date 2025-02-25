@@ -73,7 +73,7 @@ const fs = require('fs');
 
   const code = './crawling/code.txt';
 
-  fs.writeFileSync(code, restcountriesUrls.join('\n'), 'utf-8');
+  fs.writeFileSync(code, uniqueUrls.join('\n'), 'utf-8');
 
   await browser.close();
 })();
