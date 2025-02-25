@@ -15,13 +15,13 @@ const fs = require('fs');
 
   const restcountriesUrls = [];
 
-  // countriesData.forEach(country => {
-  //   const commonName = country?.name?.common;
-  //   if (commonName) {
-  //     urlsBasic.push(`https://restcountries.com/v3.1/name/${commonName}`);
-  //     urlsFullText.push(`https://restcountries.com/v3.1/name/${commonName}?fullText=true`);
-  //   }
-  // });
+  countriesData.forEach(country => {
+    const commonName = country?.name?.common;
+    if (commonName) {
+      restcountriesUrls.push(`https://restcountries.com/v3.1/name/${commonName}`);
+      restcountriesUrls.push(`https://restcountries.com/v3.1/name/${commonName}?fullText=true`);
+    }
+  });
 
   countriesData.forEach(countriesList => {
     const alphaName = countriesList?.cca2;
