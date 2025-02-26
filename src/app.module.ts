@@ -20,6 +20,7 @@ import { ResponseBody } from './api-response/entities/response-body.entity';
 import { ResponseTime } from './api-response/entities/response-time.entity';
 import { StatusCode } from './api-response/entities/status-code.entity';
 import { SuccessStatus } from './api-response/entities/success-status.entity';
+import { CrawlingModule } from './crawling/crawling.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { SuccessStatus } from './api-response/entities/success-status.entity';
     ApiEndpointModule,
     ApiResponseModule,
     CronjobModule,
+    CrawlingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
