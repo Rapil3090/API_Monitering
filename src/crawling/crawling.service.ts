@@ -14,6 +14,7 @@ export class CrawlingService {
   private readonly hrefsFile = './crawling/hrefs.txt';
   private readonly pokeUrlsFile = './crawling/poke.txt';
   private readonly pokeEncountersFile = './crawling/poke_encounters.txt';
+  private readonly jsonPlaceholderFile = './crawling/jsonplaceholder.txt';
   private readonly RESTART_INTERVAL = 1 * 60 * 1000;
   private lastRestartTime = Date.now();
   
@@ -27,6 +28,7 @@ export class CrawlingService {
     fs.writeFileSync(this.hrefsFile, '', 'utf-8');
     fs.writeFileSync(this.pokeUrlsFile, '', 'utf-8');
     fs.writeFileSync(this.pokeEncountersFile, '', 'utf-8');
+    fs.writeFileSync(this.jsonPlaceholderFile, '', 'utf-8');
   }
 
   private async restartBrowser(): Promise<puppeteer.Browser> {
@@ -122,7 +124,7 @@ export class CrawlingService {
     } catch (error) {
       console.error('데이터셋 URL 추출 중 오류 발생:', error.message);
     }
-  }
+  };
 
   private async processSeoulOpenApiUrls(): Promise<void> {
     const datasetUrls = fs.readFileSync(this.datasetUrlsFile, `utf-8`).split(`\n`).filter(Boolean);
@@ -213,7 +215,7 @@ export class CrawlingService {
     } catch (error) {
       console.error('스크립트 실행 중 에러 발생:', error.message);
     }
-  }
+  };
   
   private async crawlPokeArticles1(): Promise<void> {
     const urls = [
@@ -325,6 +327,50 @@ export class CrawlingService {
     } catch (error) {
       console.error("Error during crawling:", error.message);
     }
+  };
+
+  private async crawlJsonPlaceholder(): Promise<void> {
+    const urls = [
+      'https://jsonplaceholder.typicode.com/posts',
+      'https://jsonplaceholder.typicode.com/comments',
+      'https://jsonplaceholder.typicode.com/albums',
+      'https://jsonplaceholder.typicode.com/photos',
+      'https://jsonplaceholder.typicode.com/todos',
+      'https://jsonplaceholder.typicode.com/users',
+    ];
+
+    let allData: string[] = [];
+
+    try {
+      this.browser = await this.restartBrowser();
+      const page = await this.browser.newPage();
+
+      for (const url of urls) {
+        console.log(`Fetching data from: ${url}`);
+        await page.goto(url, { waitUntil: 'networkidle2' });
+
+        const data = await page.evaluate(() => JSON.parse(document.body.innerText));
+
+        const newUrls = data.map((item) => {
+          if (item.id) {
+            return `${url}/${item.id}`;
+          }
+          return null;
+        }).filter(Boolean);
+
+        allData.push(...newUrls);
+      }
+
+      fs.writeFileSync(this.jsonPlaceholderFile, allData.join('\n'), 'utf-8');
+      console.log(`JSONPlaceholder 데이터가 ${this.jsonPlaceholderFile}에 저장되었습니다.`);
+    } catch (error) {
+      console.error('JSONPlaceholder 크롤링 중 오류 발생:', error.message);
+    } finally {
+      if (this.browser) {
+        console.log('브라우저 종료 중...');
+        await this.browser.close();
+      }
+    }
   }
 
 
@@ -335,15 +381,20 @@ export class CrawlingService {
       await this.extractSeoulDatasetUrls();
       await this.processSeoulOpenApiUrls();
 
-      this.browser = await this.restartBrowser();
+      console.log(`열린데이터 광장 크롤링 종료`);
 
       await this.extractAllData();
 
-      this.browser = await this.restartBrowser();
+      console.log(`freepublicapis 크롤링 종료`);
 
       await this.crawlPokeArticles1();
       await this.crawlPokeArticles2();
 
+      console.log(`poke api 크롤링 종료`);
+
+      await this.crawlJsonPlaceholder();
+
+      console.log(`jsonplaceholder api 크롤링 종료`);
 
     } catch (error) {
       if (this.browser) {
