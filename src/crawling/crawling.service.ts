@@ -15,6 +15,7 @@ export class CrawlingService {
   private readonly pokeUrlsFile = './crawling/poke.txt';
   private readonly pokeEncountersFile = './crawling/poke_encounters.txt';
   private readonly jsonPlaceholderFile = './crawling/jsonplaceholder.txt';
+  private readonly restCountriesFile = './crawling/restcountries_urls.txt';
   private readonly RESTART_INTERVAL = 1 * 60 * 1000;
   private lastRestartTime = Date.now();
   
@@ -29,6 +30,7 @@ export class CrawlingService {
     fs.writeFileSync(this.pokeUrlsFile, '', 'utf-8');
     fs.writeFileSync(this.pokeEncountersFile, '', 'utf-8');
     fs.writeFileSync(this.jsonPlaceholderFile, '', 'utf-8');
+    fs.writeFileSync(this.restCountriesFile, '', 'utf-8');
   }
 
   private async restartBrowser(): Promise<puppeteer.Browser> {
@@ -371,8 +373,100 @@ export class CrawlingService {
         await this.browser.close();
       }
     }
-  }
+  };
 
+
+  public async crawlRestCountries(): Promise<void> {
+    const apiUrl = 'https://restcountries.com/v3.1/all';
+    const restcountriesUrls: string[] = [];
+
+    try {
+      this.browser = await this.restartBrowser();
+      const page = await this.browser.newPage();
+
+      console.log(`Fetching data from: ${apiUrl}`);
+      await page.goto(apiUrl, { waitUntil: 'networkidle2' });
+
+      const countriesData = (await page.evaluate(() => JSON.parse(document.body.innerText))) as Array<{
+        name?: { common?: string };
+        cca2?: string;
+        ccn3?: string;
+        cca3?: string;
+        cioc?: string;
+        currencies?: Record<string, unknown>;
+        demonyms?: { eng?: { f: string; m: string } };
+        languages?: Record<string, string>;
+        capital?: string[];
+        region?: string;
+        subregion?: string;
+        translations?: Record<string, { common: string }>;
+      }>;
+
+      countriesData.forEach((country) => {
+        const commonName = country?.name?.common;
+        if (commonName) {
+          restcountriesUrls.push(`https://restcountries.com/v3.1/name/${commonName}`);
+          restcountriesUrls.push(`https://restcountries.com/v3.1/name/${commonName}?fullText=true`);
+        }
+      });
+
+      countriesData.forEach((countriesList) => {
+        const alphaName = countriesList?.cca2;
+        const alphaName2 = countriesList?.ccn3;
+        const alphaName3 = countriesList?.cca3;
+        const alphaName4 = countriesList?.cioc;
+
+        const currencies = countriesList?.currencies ? Object.keys(countriesList.currencies)[0] : null;
+
+        const demonym = countriesList?.demonyms?.eng
+          ? countriesList.demonyms.eng.f === countriesList.demonyms.eng.m
+            ? countriesList.demonyms.eng.f
+            : `${countriesList.demonyms.eng.f}, ${countriesList.demonyms.eng.m}`
+          : null;
+
+        const language = countriesList?.languages ? Object.values(countriesList.languages)[0] : null;
+        const capital = countriesList?.capital;
+        const region = countriesList?.region;
+        const subregion = countriesList?.subregion;
+
+        if (countriesList?.translations) {
+          Object.entries(countriesList.translations).forEach(([key, value]) => {
+            const translationCommonName = value.common;
+            if (translationCommonName) {
+              restcountriesUrls.push(
+                `https://restcountries.com/v3.1/translation/${translationCommonName}`,
+              );
+            }
+          });
+        }
+
+        if (alphaName) restcountriesUrls.push(`https://restcountries.com/v3.1/alpha/${alphaName}`);
+        if (alphaName2) restcountriesUrls.push(`https://restcountries.com/v3.1/alpha/${alphaName2}`);
+        if (alphaName3) restcountriesUrls.push(`https://restcountries.com/v3.1/alpha/${alphaName3}`);
+        if (alphaName4) restcountriesUrls.push(`https://restcountries.com/v3.1/alpha/${alphaName4}`);
+        if (currencies) restcountriesUrls.push(`https://restcountries.com/v3.1/currency/${currencies}`);
+        if (demonym) restcountriesUrls.push(`https://restcountries.com/v3.1/demonym/${demonym}`);
+        if (language) restcountriesUrls.push(`https://restcountries.com/v3.1/lang/${language}`);
+        if (capital) restcountriesUrls.push(`https://restcountries.com/v3.1/capital/${capital}`);
+        if (region) restcountriesUrls.push(`https://restcountries.com/v3.1/region/${region}`);
+        if (subregion) restcountriesUrls.push(`https://restcountries.com/v3.1/subregion/${subregion}`);
+      });
+
+      const uniqueUrls = [...new Set(restcountriesUrls)];
+      fs.writeFileSync(this.restCountriesFile, uniqueUrls.join('\n'), 'utf-8');
+      console.log(`REST Countries 데이터가 ${this.restCountriesFile}에 저장되었습니다.`);
+    } catch (error) {
+      console.error('REST Countries 크롤링 중 오류 발생:', error);
+    } finally {
+      if (this.browser) {
+        console.log('브라우저 종료 중...');
+        await this.browser.close();
+      }
+    }
+  };
+
+
+  
 
   public async startCrawling(): Promise<void> {
     try {
@@ -395,6 +489,10 @@ export class CrawlingService {
       await this.crawlJsonPlaceholder();
 
       console.log(`jsonplaceholder api 크롤링 종료`);
+
+      await this.crawlRestCountries();
+
+      console.log(`restcountries api 크롤링 종료`);
 
     } catch (error) {
       if (this.browser) {
