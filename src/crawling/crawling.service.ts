@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
 import * as fs from 'fs';
 import * as path from 'path';
+import axios from 'axios';
 
 @Injectable()
 export class CrawlingService {
@@ -11,6 +12,8 @@ export class CrawlingService {
   private readonly failedUrlsFile = './crawling/failed_urls.txt';
   private readonly extractedUrlsFile = './crawling/extracted_urls.txt';
   private readonly hrefsFile = './crawling/hrefs.txt';
+  private readonly pokeUrlsFile = './crawling/poke.txt';
+  private readonly pokeEncountersFile = './crawling/poke_encounters.txt';
   private readonly RESTART_INTERVAL = 1 * 60 * 1000;
   private lastRestartTime = Date.now();
   
@@ -22,6 +25,8 @@ export class CrawlingService {
     fs.writeFileSync(this.datasetUrlsFile, '', 'utf-8');
     fs.writeFileSync(this.extractedUrlsFile, '', 'utf-8');
     fs.writeFileSync(this.hrefsFile, '', 'utf-8');
+    fs.writeFileSync(this.pokeUrlsFile, '', 'utf-8');
+    fs.writeFileSync(this.pokeEncountersFile, '', 'utf-8');
   }
 
   private async restartBrowser(): Promise<puppeteer.Browser> {
@@ -210,6 +215,117 @@ export class CrawlingService {
     }
   }
   
+  private async crawlPokeArticles1(): Promise<void> {
+    const urls = [
+      "https://pokeapi.co/api/v2/ability/?limit=10000",
+    "https://pokeapi.co/api/v2/evolution-chain?limit=10000",
+    "https://pokeapi.co/api/v2/berry?limit=10000",
+    "https://pokeapi.co/api/v2/berry-firmness?limit=10000",
+    "https://pokeapi.co/api/v2/berry-flavor?limit=10000",
+    "https://pokeapi.co/api/v2/contest-type?limit=10000",
+    "https://pokeapi.co/api/v2/contest-effect?limit=10000",
+    "https://pokeapi.co/api/v2/super-contest-effect?limit=10000",
+    "https://pokeapi.co/api/v2/encounter-method?limit=10000",
+    "https://pokeapi.co/api/v2/encounter-condition?limit=10000",
+    "https://pokeapi.co/api/v2/encounter-condition-value?limit=10000",
+    "https://pokeapi.co/api/v2/evolution-chain?limit=10000",
+    "https://pokeapi.co/api/v2/evolution-trigger?limit=10000",
+    "https://pokeapi.co/api/v2/generation?limit=10000",
+    "https://pokeapi.co/api/v2/pokedex?limit=10000",
+    "https://pokeapi.co/api/v2/version?limit=10000",
+    "https://pokeapi.co/api/v2/version-group?limit=10000",
+    "https://pokeapi.co/api/v2/item?limit=10000",
+    "https://pokeapi.co/api/v2/item-attribute?limit=10000",
+    "https://pokeapi.co/api/v2/item-category?limit=10000",
+    "https://pokeapi.co/api/v2/item-fling-effect?limit=10000",
+    "https://pokeapi.co/api/v2/item-pocket?limit=10000",
+    "https://pokeapi.co/api/v2/location?limit=10000",
+    "https://pokeapi.co/api/v2/location-area?limit=10000",
+    "https://pokeapi.co/api/v2/pal-park-area?limit=10000",
+    "https://pokeapi.co/api/v2/region?limit=10000",
+    "https://pokeapi.co/api/v2/machine?limit=10000",
+    "https://pokeapi.co/api/v2/move?limit=10000",
+    "https://pokeapi.co/api/v2/move-ailment?limit=10000",
+    "https://pokeapi.co/api/v2/move-battle-style?limit=10000",
+    "https://pokeapi.co/api/v2/move-category?limit=10000",
+    "https://pokeapi.co/api/v2/move-damage-class?limit=10000",
+    "https://pokeapi.co/api/v2/move-learn-method?limit=10000",
+    "https://pokeapi.co/api/v2/move-target?limit=10000",
+    "https://pokeapi.co/api/v2/ability?limit=10000",
+    "https://pokeapi.co/api/v2/characteristic?limit=10000",
+    "https://pokeapi.co/api/v2/egg-group?limit=10000",
+    "https://pokeapi.co/api/v2/gender?limit=10000",
+    "https://pokeapi.co/api/v2/growth-rate?limit=10000",
+    "https://pokeapi.co/api/v2/nature?limit=10000",
+    "https://pokeapi.co/api/v2/pokeathlon-stat?limit=10000",
+    "https://pokeapi.co/api/v2/pokemon?limit=10000",
+    "https://pokeapi.co/api/v2/pokemon-color?limit=10000",
+    "https://pokeapi.co/api/v2/pokemon-form?limit=10000",
+    "https://pokeapi.co/api/v2/pokemon-habitat?limit=10000",
+    "https://pokeapi.co/api/v2/pokemon-shape?limit=10000",
+    "https://pokeapi.co/api/v2/pokemon-species?limit=10000",
+    "https://pokeapi.co/api/v2/stat?limit=10000",
+    "https://pokeapi.co/api/v2/type?limit=10000",
+    "https://pokeapi.co/api/v2/language?limit=10000",
+    ];
+
+    const finalData: string[] = [];
+
+    for (const url of urls) {
+      console.log("url", url);
+      const response = await axios.get(url);
+      if (response.data.results) {
+        for (const result of response.data.results) {
+          if (result.url) {
+            console.log("result.url", result.url);
+            finalData.push(result.url);
+          } else {
+            console.log("result.url 가 없음 in", url);
+          }
+        }
+      } else {
+        console.log("response.data.results 가 없음 in", url);
+      }
+    }
+
+    fs.appendFileSync(this.pokeUrlsFile, finalData.join('\n') + '\n', 'utf-8');
+    console.log(`PokeAPI 데이터가 ${this.pokeUrlsFile}에 저장되었습니다.`);
+  };
+
+  private async crawlPokeArticles2(): Promise<void> {
+    const baseUrl = "https://pokeapi.co/api/v2/pokemon?limit=10000";
+    const finalData: string[] = [];
+
+    try {
+      const response = await axios.get(baseUrl);
+      const results = response.data.results;
+
+      if (results) {
+        for (const result of results) {
+          if (result.url) {
+            const idMatch = result.url.match(/\/pokemon\/(\d+)\//);
+            if (idMatch && idMatch[1]) {
+              const pokemonId = idMatch[1];
+              const encounterUrl = `https://pokeapi.co/api/v2/pokemon/${pokemonId}/encounters`;
+              console.log(`Generated URL: ${encounterUrl}`);
+              finalData.push(encounterUrl);
+            } else {
+              console.log(`ID 추출 실패: ${result.url}`);
+            }
+          } else {
+            console.log("result.url이 없음");
+          }
+        }
+      } else {
+        console.log("response.data.results가 없음");
+      }
+
+      fs.appendFileSync(this.pokeEncountersFile, finalData.join('\n') + '\n', 'utf-8');
+      console.log(`Encounter URL이 ${this.pokeEncountersFile}에 저장되었습니다.`);
+    } catch (error) {
+      console.error("Error during crawling:", error.message);
+    }
+  }
 
 
   public async startCrawling(): Promise<void> {
@@ -225,7 +341,8 @@ export class CrawlingService {
 
       this.browser = await this.restartBrowser();
 
-
+      await this.crawlPokeArticles1();
+      await this.crawlPokeArticles2();
 
 
     } catch (error) {
