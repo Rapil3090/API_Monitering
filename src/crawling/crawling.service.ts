@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCrawlingDto } from './dto/create-crawling.dto';
-import { UpdateCrawlingDto } from './dto/update-crawling.dto';
 import * as puppeteer from 'puppeteer';
 import * as fs from 'fs';
-import { InjectRepository } from '@nestjs/typeorm';
+import * as path from 'path';
 
 @Injectable()
 export class CrawlingService {
@@ -11,7 +9,9 @@ export class CrawlingService {
   private readonly datasetUrlsFile = './crawling/dataset_urls.txt';
   private readonly openApiUrlsFile = './crawling/openapi_urls.txt';
   private readonly failedUrlsFile = './crawling/failed_urls.txt';
-  private readonly RESTART_INTERVAL = 5 * 60 * 1000;
+  private readonly extractedUrlsFile = './crawling/extracted_urls.txt';
+  private readonly hrefsFile = './crawling/hrefs.txt';
+  private readonly RESTART_INTERVAL = 1 * 60 * 1000;
   private lastRestartTime = Date.now();
   
   constructor(
@@ -20,6 +20,8 @@ export class CrawlingService {
     fs.writeFileSync(this.openApiUrlsFile, ``, `utf-8`);
     fs.writeFileSync(this.failedUrlsFile, ``, `utf-8`);
     fs.writeFileSync(this.datasetUrlsFile, '', 'utf-8');
+    fs.writeFileSync(this.extractedUrlsFile, '', 'utf-8');
+    fs.writeFileSync(this.hrefsFile, '', 'utf-8');
   }
 
   private async restartBrowser(): Promise<puppeteer.Browser> {
@@ -117,7 +119,7 @@ export class CrawlingService {
     }
   }
 
-  async processSeoulOpenApiUrls(): Promise<void> {
+  private async processSeoulOpenApiUrls(): Promise<void> {
     const datasetUrls = fs.readFileSync(this.datasetUrlsFile, `utf-8`).split(`\n`).filter(Boolean);
     
     if (datasetUrls.length === 0) {
@@ -153,12 +155,79 @@ export class CrawlingService {
     await page.close();
   };
 
-  async startCrawling(): Promise<void> {
+
+  private async extractAllData(): Promise<void> {
+    try {
+      const targetURL = 'https://www.freepublicapis.com/tags/all';
+      const outputFilePath = './crawling/extracted_results.txt';
+      const baseUrl = new URL(targetURL).origin;
+  
+      const page = await this.browser.newPage();
+  
+      console.log(`페이지 이동 중: ${targetURL}`);
+      await page.goto(targetURL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  
+      const hrefs = await page.$$eval('a[href]', elements =>
+        elements.map(el => el.getAttribute('href')),
+      );
+  
+      const fullUrls = hrefs.map(href => {
+        if (!href) return '';
+        if (href.startsWith('http') || href.startsWith('//')) {
+          return href.startsWith('//') ? `https:${href}` : href;
+        }
+        return `${baseUrl}${href.startsWith('/') ? '' : '/'}${href}`;
+      }).filter(Boolean);
+  
+      console.log(`추출된 href 개수: ${fullUrls.length}`);
+  
+      const extractedResults: string[] = [];
+  
+      for (const url of fullUrls) {
+        try {
+          console.log(`접속 중: ${url}`);
+          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  
+          const extractedContent = await page.$eval(
+            'div.p-4.my-4.w-full.rounded-xl.bg-white.border-2.border-orange-500.shadow-sm.text-primary-900.outline-none.overflow-x-auto.text-xs.md\\:text-base',
+            el => el.textContent.trim()
+          );
+  
+          console.log(`추출된 내용: ${extractedContent}`);
+          extractedResults.push(`URL: ${url}\n내용: ${extractedContent}\n`);
+        } catch (error) {
+          console.log(`주소를 찾을 수 없음 또는 div를 찾을 수 없음: ${url}`);
+          continue;
+        }
+      }
+  
+      fs.writeFileSync(outputFilePath, extractedResults.join('\n'), 'utf-8');
+      console.log(`모든 데이터가 ${outputFilePath}에 저장되었습니다.`);
+  
+      await page.close();
+    } catch (error) {
+      console.error('스크립트 실행 중 에러 발생:', error.message);
+    }
+  }
+  
+
+
+  public async startCrawling(): Promise<void> {
     try {
       this.browser = await this.restartBrowser();
       
       await this.extractSeoulDatasetUrls();
       await this.processSeoulOpenApiUrls();
+
+      this.browser = await this.restartBrowser();
+
+      await this.extractAllData();
+
+      this.browser = await this.restartBrowser();
+
+
+
+
     } catch (error) {
       if (this.browser) {
         console.log(`브라우저를 종료합니다`);
