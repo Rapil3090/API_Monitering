@@ -16,7 +16,7 @@ export class CrawlingService {
   private readonly pokeEncountersFile = './crawling/poke_encounters.txt';
   private readonly jsonPlaceholderFile = './crawling/jsonplaceholder.txt';
   private readonly restCountriesFile = './crawling/restcountries_urls.txt';
-  private readonly RESTART_INTERVAL = 1 * 60 * 1000;
+  private readonly RESTART_INTERVAL = 10 * 60 * 1000;
   private lastRestartTime = Date.now();
   
   constructor(
@@ -465,6 +465,26 @@ export class CrawlingService {
     }
   };
 
+  private async fetchRandomWords(): Promise<void> {
+    const randomWordApiUrl = 'https://random-word-api.herokuapp.com/word?number=60000';
+
+    try {
+      console.log('랜덤 단어 API 호출 중...');
+      const response = await axios.get(randomWordApiUrl);
+      const randomWords: string[] = response.data;
+
+      console.log(`총 ${randomWords.length}개의 단어를 가져왔습니다.`);
+
+      const dictionaryApiBaseUrl = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
+      const dictionaryUrls = randomWords.map((word) => `${dictionaryApiBaseUrl}${word}`);
+
+      const filePath = './crawling/randomWord.txt';
+      fs.writeFileSync(filePath, dictionaryUrls.join('\n'), 'utf-8');
+      console.log(`모든 URL이 ${filePath}에 저장되었습니다.`);
+    } catch (error) {
+      console.error(`랜덤 단어 API 호출 중 오류 발생: ${error.message}`);
+    }
+  };
 
   
 
@@ -493,6 +513,10 @@ export class CrawlingService {
       await this.crawlRestCountries();
 
       console.log(`restcountries api 크롤링 종료`);
+
+      await this.fetchRandomWords();
+
+      console.log(`사전 단어 크롤링 완료`);
 
     } catch (error) {
       if (this.browser) {
