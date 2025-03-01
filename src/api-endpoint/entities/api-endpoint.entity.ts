@@ -13,7 +13,7 @@ export class ApiEndpoint {
     @Column('json', { nullable:true })
     parameters: Record<any, any>;
 
-    @Column()
+    @Column({nullable:true})
     callTime: number;
 
 }
