@@ -12,7 +12,6 @@ import axios, { AxiosResponse } from "axios";
 import { ApiResponse } from "src/api-response/entities/api-response.entity";
 import { RequestApiEndpointDto } from "./dto/request-api-endpoint.dto";
 import { ApiEndpointRepository } from "./repository/api-endpoint.repository";
-import { KafkaProducerService } from "src/kafka/kafka-producer.service";
 import { ApiResponseRepository } from "src/api-response/repository/api-response.repository";
 import { Url } from "./entities/url.entity";
 import { UrlRepository } from "./repository/url.repository";
@@ -25,7 +24,6 @@ export class ApiEndpointService {
     @InjectRepository(ApiResponse)
     private readonly apiResponseRepository: ApiResponseRepository,
     @Inject("TIMERS_MAP") private readonly timers: Map<number, NodeJS.Timeout>,
-    private readonly kafkaProducerService: KafkaProducerService,
     @InjectRepository(Url)
     private readonly urlRepository: UrlRepository,
   ) {}
@@ -156,7 +154,6 @@ export class ApiEndpointService {
           success: true,
         };
 
-        await this.kafkaProducerService.sendMessage('response', apiResponse);
         
         return apiResponse;
         
@@ -181,7 +178,6 @@ export class ApiEndpointService {
               success: false,
             };
 
-            await this.kafkaProducerService.sendMessage('response', apiResponse);
             // console.log(
             //   `${apiEndpointDto.url} 의 요청이 ${retries}회 실패하였습니다. ID: ${apiEndpointDto.id}`
             // );

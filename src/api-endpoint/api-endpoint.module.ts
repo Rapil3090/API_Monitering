@@ -7,7 +7,6 @@ import { ApiResponse } from 'src/api-response/entities/api-response.entity';
 import { Cronjob } from 'src/cronjob/entities/cronjob.entity';
 import { CronjobService } from 'src/cronjob/cronjob.service';
 import { ApiEndpointRepository } from './repository/api-endpoint.repository';
-import { KafkaModule } from 'src/kafka/kafka.module';
 import { ApiResponseRepository } from 'src/api-response/repository/api-response.repository';
 import { Url } from './entities/url.entity';
 import { UrlRepository } from './repository/url.repository';
@@ -20,7 +19,6 @@ import { UrlRepository } from './repository/url.repository';
       Url,
       Cronjob,      
     ]),
-    KafkaModule,
   ],
   controllers: [ApiEndpointController],
   providers: [
