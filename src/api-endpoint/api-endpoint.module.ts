@@ -8,14 +8,16 @@ import { Cronjob } from 'src/cronjob/entities/cronjob.entity';
 import { CronjobService } from 'src/cronjob/cronjob.service';
 import { ApiEndpointRepository } from './repository/api-endpoint.repository';
 import { KafkaModule } from 'src/kafka/kafka.module';
-import { KafkaProducerService } from 'src/kafka/kafka-producer.service';
 import { ApiResponseRepository } from 'src/api-response/repository/api-response.repository';
+import { Url } from './entities/url.entity';
+import { UrlRepository } from './repository/url.repository';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       ApiEndpoint,
       ApiResponse,
+      Url,
       Cronjob,      
     ]),
     KafkaModule,
@@ -25,6 +27,7 @@ import { ApiResponseRepository } from 'src/api-response/repository/api-response.
     ApiEndpointRepository,
     ApiResponseRepository,
     ApiEndpointService,
+    UrlRepository,
     CronjobService,
     {
       provide: 'TIMERS_MAP',

@@ -14,6 +14,8 @@ import { RequestApiEndpointDto } from "./dto/request-api-endpoint.dto";
 import { ApiEndpointRepository } from "./repository/api-endpoint.repository";
 import { KafkaProducerService } from "src/kafka/kafka-producer.service";
 import { ApiResponseRepository } from "src/api-response/repository/api-response.repository";
+import { Url } from "./entities/url.entity";
+import { UrlRepository } from "./repository/url.repository";
 
 @Injectable()
 export class ApiEndpointService {
@@ -24,6 +26,8 @@ export class ApiEndpointService {
     private readonly apiResponseRepository: ApiResponseRepository,
     @Inject("TIMERS_MAP") private readonly timers: Map<number, NodeJS.Timeout>,
     private readonly kafkaProducerService: KafkaProducerService,
+    @InjectRepository(Url)
+    private readonly urlRepository: UrlRepository,
   ) {}
 
   async create(createApiEndpointDto: CreateApiEndpointDto) {
@@ -157,7 +161,7 @@ export class ApiEndpointService {
         return apiResponse;
         
       } catch (error) {
-        if (error.response.status >= 500 && error.response.status < 600) {
+        if (error.response && error.response.status >= 500 && error.response.status < 600) {
           // console.warn(`서버 에러 발생. 재시도 중 (${i}/${retries})`);
 
           // console.log("----------");

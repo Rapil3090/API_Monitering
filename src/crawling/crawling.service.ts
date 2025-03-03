@@ -3,35 +3,24 @@ import * as puppeteer from 'puppeteer';
 import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
+import { ApiEndpoint } from 'src/api-endpoint/entities/api-endpoint.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ApiEndpointRepository } from 'src/api-endpoint/repository/api-endpoint.repository';
+import { Url } from 'src/api-endpoint/entities/url.entity';
+import { UrlRepository } from 'src/api-endpoint/repository/url.repository';
 
 @Injectable()
 export class CrawlingService {
   private browser: puppeteer.Browser;
-  private readonly datasetUrlsFile = './crawling/dataset_urls.txt';
-  private readonly openApiUrlsFile = './crawling/openapi_urls.txt';
-  private readonly failedUrlsFile = './crawling/failed_urls.txt';
-  private readonly extractedUrlsFile = './crawling/extracted_urls.txt';
-  private readonly hrefsFile = './crawling/hrefs.txt';
-  private readonly pokeUrlsFile = './crawling/poke.txt';
-  private readonly pokeEncountersFile = './crawling/poke_encounters.txt';
-  private readonly jsonPlaceholderFile = './crawling/jsonplaceholder.txt';
-  private readonly restCountriesFile = './crawling/restcountries_urls.txt';
   private readonly RESTART_INTERVAL = 10 * 60 * 1000;
   private lastRestartTime = Date.now();
   
   constructor(
-    
-  ) {
-    fs.writeFileSync(this.openApiUrlsFile, ``, `utf-8`);
-    fs.writeFileSync(this.failedUrlsFile, ``, `utf-8`);
-    fs.writeFileSync(this.datasetUrlsFile, '', 'utf-8');
-    fs.writeFileSync(this.extractedUrlsFile, '', 'utf-8');
-    fs.writeFileSync(this.hrefsFile, '', 'utf-8');
-    fs.writeFileSync(this.pokeUrlsFile, '', 'utf-8');
-    fs.writeFileSync(this.pokeEncountersFile, '', 'utf-8');
-    fs.writeFileSync(this.jsonPlaceholderFile, '', 'utf-8');
-    fs.writeFileSync(this.restCountriesFile, '', 'utf-8');
-  }
+    @InjectRepository(ApiEndpoint)
+    private readonly apiEndpointRepository: ApiEndpointRepository,
+    @InjectRepository(Url)
+    private readonly urlRepository: UrlRepository,
+  ) { }
 
   private async restartBrowser(): Promise<puppeteer.Browser> {
     if (this.browser) {
@@ -55,8 +44,9 @@ export class CrawlingService {
     }
   };
 
-  private async extractSeoulDatasetUrls(): Promise<void> {
+  private async extractSeoulDatasetUrls(): Promise<string[]> {
     const baseUrl = 'https://data.seoul.go.kr/dataList/datasetList.do';
+    const datasetUrls : string[] = [];
 
     try {
       this.browser = await this.restartBrowser();
@@ -76,7 +66,9 @@ export class CrawlingService {
         for (const url of urlsOnPage) {
           if (url) {
             const fullUrl = `https://data.seoul.go.kr/dataList/${url}`;
-            fs.appendFileSync(this.datasetUrlsFile, fullUrl + '\n', 'utf-8');
+            
+            datasetUrls.push(fullUrl);
+
             console.log(`추출된 데이터셋 URL: ${fullUrl}`);
           }
         }
@@ -126,10 +118,11 @@ export class CrawlingService {
     } catch (error) {
       console.error('데이터셋 URL 추출 중 오류 발생:', error.message);
     }
+
+    return datasetUrls;
   };
 
-  private async processSeoulOpenApiUrls(): Promise<void> {
-    const datasetUrls = fs.readFileSync(this.datasetUrlsFile, `utf-8`).split(`\n`).filter(Boolean);
+  private async processSeoulOpenApiUrls(datasetUrls: string[]): Promise<void> {
     
     if (datasetUrls.length === 0) {
       console.log(`텍스트파일에 url이 없습니다.`);
@@ -153,11 +146,20 @@ export class CrawlingService {
         await page.waitForSelector('a[target="ifr1"]', {timeout: 10000});
         const apiUrl = await page.$eval('a[target="ifr1"]', (link) => link.href);
 
-        fs.appendFileSync(this.openApiUrlsFile, apiUrl + `\n`, `utf-8`);
+        const existingUrl = await this.urlRepository.findOne({
+          where: {
+            url: apiUrl,
+          }
+        });
+
+        if (!existingUrl) {
+          await this.urlRepository.save({
+            url: apiUrl,
+          })
+        };
 
       } catch (error) {
         console.error(`추출실패 : ${datasetUrl}, 에러 메시지: ${error.message}` );
-        fs.appendFileSync(this.failedUrlsFile, datasetUrl + `\n`, `utf-8`);
       }
     }
 
@@ -168,7 +170,6 @@ export class CrawlingService {
   private async extractAllData(): Promise<void> {
     try {
       const targetURL = 'https://www.freepublicapis.com/tags/all';
-      const outputFilePath = './crawling/extracted_results.txt';
       const baseUrl = new URL(targetURL).origin;
   
       const page = await this.browser.newPage();
@@ -203,15 +204,24 @@ export class CrawlingService {
           );
   
           console.log(`추출된 내용: ${extractedContent}`);
-          extractedResults.push(`URL: ${url}\n내용: ${extractedContent}\n`);
+
+          const existingUrl = await this.urlRepository.findOne({
+            where: {
+              url: extractedContent,
+            }
+          });
+    
+          if (!existingUrl) {
+            await this.urlRepository.save({
+              url: extractedContent,
+            })
+          };
+
         } catch (error) {
           console.log(`주소를 찾을 수 없음 또는 div를 찾을 수 없음: ${url}`);
           continue;
         }
       }
-  
-      fs.writeFileSync(outputFilePath, extractedResults.join('\n'), 'utf-8');
-      console.log(`모든 데이터가 ${outputFilePath}에 저장되었습니다.`);
   
       await page.close();
     } catch (error) {
@@ -221,7 +231,7 @@ export class CrawlingService {
   
   private async crawlPokeArticles1(): Promise<void> {
     const urls = [
-      "https://pokeapi.co/api/v2/ability/?limit=10000",
+    "https://pokeapi.co/api/v2/ability/?limit=10000",
     "https://pokeapi.co/api/v2/evolution-chain?limit=10000",
     "https://pokeapi.co/api/v2/berry?limit=10000",
     "https://pokeapi.co/api/v2/berry-firmness?limit=10000",
@@ -282,7 +292,19 @@ export class CrawlingService {
         for (const result of response.data.results) {
           if (result.url) {
             console.log("result.url", result.url);
-            finalData.push(result.url);
+
+            const existingUrl = await this.apiEndpointRepository.findOne({
+              where: {
+                url: result.url,
+              }
+            });
+      
+            if (!existingUrl) {
+              await this.apiEndpointRepository.save({
+                url: result.url,
+              })
+            };
+
           } else {
             console.log("result.url 가 없음 in", url);
           }
@@ -292,13 +314,11 @@ export class CrawlingService {
       }
     }
 
-    fs.appendFileSync(this.pokeUrlsFile, finalData.join('\n') + '\n', 'utf-8');
-    console.log(`PokeAPI 데이터가 ${this.pokeUrlsFile}에 저장되었습니다.`);
+    console.log(`poke 크롤링 종료`);
   };
 
   private async crawlPokeArticles2(): Promise<void> {
     const baseUrl = "https://pokeapi.co/api/v2/pokemon?limit=10000";
-    const finalData: string[] = [];
 
     try {
       const response = await axios.get(baseUrl);
@@ -312,7 +332,19 @@ export class CrawlingService {
               const pokemonId = idMatch[1];
               const encounterUrl = `https://pokeapi.co/api/v2/pokemon/${pokemonId}/encounters`;
               console.log(`Generated URL: ${encounterUrl}`);
-              finalData.push(encounterUrl);
+
+              const existingUrl = await this.urlRepository.findOne({
+                where: {
+                  url: encounterUrl,
+                }
+              });
+        
+              if (!existingUrl) {
+                await this.urlRepository.save({
+                  url: encounterUrl,
+                })
+              };
+
             } else {
               console.log(`ID 추출 실패: ${result.url}`);
             }
@@ -324,8 +356,7 @@ export class CrawlingService {
         console.log("response.data.results가 없음");
       }
 
-      fs.appendFileSync(this.pokeEncountersFile, finalData.join('\n') + '\n', 'utf-8');
-      console.log(`Encounter URL이 ${this.pokeEncountersFile}에 저장되었습니다.`);
+      console.log(`Encounter URL이 종료`);
     } catch (error) {
       console.error("Error during crawling:", error.message);
     }
@@ -340,8 +371,6 @@ export class CrawlingService {
       'https://jsonplaceholder.typicode.com/todos',
       'https://jsonplaceholder.typicode.com/users',
     ];
-
-    let allData: string[] = [];
 
     try {
       this.browser = await this.restartBrowser();
@@ -360,11 +389,22 @@ export class CrawlingService {
           return null;
         }).filter(Boolean);
 
-        allData.push(...newUrls);
+        const existingUrl = await this.urlRepository.findOne({
+          where: {
+            url: newUrls,
+          }
+        });
+  
+        if (!existingUrl) {
+          await this.urlRepository.save({
+            url: newUrls,
+          })
+        };
+        
+
       }
 
-      fs.writeFileSync(this.jsonPlaceholderFile, allData.join('\n'), 'utf-8');
-      console.log(`JSONPlaceholder 데이터가 ${this.jsonPlaceholderFile}에 저장되었습니다.`);
+      console.log(`JSONPlaceholder 종료되었습니다`);
     } catch (error) {
       console.error('JSONPlaceholder 크롤링 중 오류 발생:', error.message);
     } finally {
@@ -453,8 +493,22 @@ export class CrawlingService {
       });
 
       const uniqueUrls = [...new Set(restcountriesUrls)];
-      fs.writeFileSync(this.restCountriesFile, uniqueUrls.join('\n'), 'utf-8');
-      console.log(`REST Countries 데이터가 ${this.restCountriesFile}에 저장되었습니다.`);
+      for(const url of uniqueUrls) {
+
+        const existingUrl = await this.urlRepository.findOne({
+          where: {
+            url,
+          }
+        });
+  
+        if (!existingUrl) {
+          await this.urlRepository.save({
+            url,
+          })
+        };
+      }
+      
+      console.log(`REST Countries 종료되었습니다.`);
     } catch (error) {
       console.error('REST Countries 크롤링 중 오류 발생:', error);
     } finally {
@@ -478,9 +532,23 @@ export class CrawlingService {
       const dictionaryApiBaseUrl = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
       const dictionaryUrls = randomWords.map((word) => `${dictionaryApiBaseUrl}${word}`);
 
-      const filePath = './crawling/randomWord.txt';
-      fs.writeFileSync(filePath, dictionaryUrls.join('\n'), 'utf-8');
-      console.log(`모든 URL이 ${filePath}에 저장되었습니다.`);
+
+      for(const url of dictionaryUrls) {
+
+        const existingUrl = await this.urlRepository.findOne({
+          where: {
+            url,
+          }
+        });
+  
+        if (!existingUrl) {
+          await this.urlRepository.save({
+            url,
+          })
+        };
+      };
+
+      console.log(`모든 URL이 종료되었습니다.`);
     } catch (error) {
       console.error(`랜덤 단어 API 호출 중 오류 발생: ${error.message}`);
     }
@@ -492,8 +560,8 @@ export class CrawlingService {
     try {
       this.browser = await this.restartBrowser();
       
-      await this.extractSeoulDatasetUrls();
-      await this.processSeoulOpenApiUrls();
+      const datasetUrls = await this.extractSeoulDatasetUrls();
+      await this.processSeoulOpenApiUrls(datasetUrls);
 
       console.log(`열린데이터 광장 크롤링 종료`);
 
