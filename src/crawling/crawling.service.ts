@@ -24,25 +24,29 @@ export class CrawlingService {
 
   private async restartBrowser(): Promise<puppeteer.Browser> {
     if (this.browser) {
-      console.log(`브라우저 종료`);
       await this.browser.close();
     }
-    console.log(`브라우저 다시 시작`);
-    this.browser = await puppeteer.launch({ headless: false });
-    return this.browser;
+    return puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--disable-gpu',
+        '--window-size=1280x800',
+      ],
+    });
   };
 
-  private async safeGoto(page: puppeteer.Page, url: string, retries = 3): Promise<void> {
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000});
-        return;
-      } catch (error) {
-        console.error(`페이지 이동 실패 ${attempt}/${retries}`);
-        if (attempt === retries) throw error;
-      }
+  private async safeGoto(page: puppeteer.Page, url: string): Promise<void> {
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    } catch (error) {
+      console.error(`페이지 이동 실패: ${url}, 에러 메시지: ${error.message}`);
     }
-  };
+  }
+
 
   private async extractSeoulDatasetUrls(): Promise<string[]> {
     const baseUrl = 'https://data.seoul.go.kr/dataList/datasetList.do';
