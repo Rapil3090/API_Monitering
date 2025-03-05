@@ -24,6 +24,7 @@ export class CrawlingService {
 
   private async restartBrowser(): Promise<puppeteer.Browser> {
     if (this.browser) {
+      console.log(`브라우저 재시작`);
       await this.browser.close();
     }
     return puppeteer.launch({
@@ -51,6 +52,7 @@ export class CrawlingService {
   private async extractSeoulDatasetUrls(): Promise<string[]> {
     const baseUrl = 'https://data.seoul.go.kr/dataList/datasetList.do';
     const datasetUrls : string[] = [];
+    console.log(`열린 크롤링 시작`);
 
     try {
       this.browser = await this.restartBrowser();
@@ -562,41 +564,50 @@ export class CrawlingService {
 
   public async startCrawling(): Promise<void> {
     try {
-      this.browser = await this.restartBrowser();
-      
-      const datasetUrls = await this.extractSeoulDatasetUrls();
-      await this.processSeoulOpenApiUrls(datasetUrls);
+        const startTime = Date.now();
 
-      console.log(`열린데이터 광장 크롤링 종료`);
+        this.browser = await this.restartBrowser();
+        console.log(`[0ms] 브라우저 재시작 완료`);
 
-      await this.extractAllData();
+        let methodStartTime = Date.now();
+        const datasetUrls = await this.extractSeoulDatasetUrls();
+        console.log(`[${Date.now() - startTime}ms] extractSeoulDatasetUrls 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
-      console.log(`freepublicapis 크롤링 종료`);
+        methodStartTime = Date.now();
+        await this.processSeoulOpenApiUrls(datasetUrls);
+        console.log(`[${Date.now() - startTime}ms] processSeoulOpenApiUrls 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
-      await this.crawlPokeArticles1();
-      await this.crawlPokeArticles2();
+        methodStartTime = Date.now();
+        await this.extractAllData();
+        console.log(`[${Date.now() - startTime}ms] extractAllData 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
-      console.log(`poke api 크롤링 종료`);
+        methodStartTime = Date.now();
+        await this.crawlPokeArticles1();
+        console.log(`[${Date.now() - startTime}ms] crawlPokeArticles1 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
-      await this.crawlJsonPlaceholder();
+        methodStartTime = Date.now();
+        await this.crawlPokeArticles2();
+        console.log(`[${Date.now() - startTime}ms] crawlPokeArticles2 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
-      console.log(`jsonplaceholder api 크롤링 종료`);
+        methodStartTime = Date.now();
+        await this.crawlJsonPlaceholder();
+        console.log(`[${Date.now() - startTime}ms] crawlJsonPlaceholder 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
-      await this.crawlRestCountries();
+        methodStartTime = Date.now();
+        await this.crawlRestCountries();
+        console.log(`[${Date.now() - startTime}ms] crawlRestCountries 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
-      console.log(`restcountries api 크롤링 종료`);
-
-      await this.fetchRandomWords();
-
-      console.log(`사전 단어 크롤링 완료`);
+        methodStartTime = Date.now();
+        await this.fetchRandomWords();
+        console.log(`[${Date.now() - startTime}ms] fetchRandomWords 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
     } catch (error) {
-      if (this.browser) {
-        console.log(`브라우저를 종료합니다`);
-        await this.browser.close();
-      }
+        if (this.browser) {
+            console.log(`브라우저를 종료합니다`);
+            await this.browser.close();
+        }
     }
-  };
+};
 
 
   
