@@ -23,26 +23,40 @@ export class CrawlingService {
   ) { }
 
   private async restartBrowser(): Promise<puppeteer.Browser> {
+    console.log(`리스타트 진입`);
+
     if (this.browser) {
-      console.log(`브라우저 재시작`);
-      await this.browser.close();
+        console.log(`브라우저 재시작`);
+        try {
+            await this.browser.close();
+            console.log(`브라우저 정상적으로 닫힘`);
+        } catch (error) {
+            console.error(`브라우저 닫기 중 오류 발생: ${error.message}`);
+        }
     }
-    return puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1280x800',
-      ],
-    });
-  };
+
+    try {
+        console.log(`새로운 브라우저 인스턴스 생성 중...`);
+        const browser = await puppeteer.launch({
+            headless: true,
+            executablePath: '/usr/bin/chromium-browser',
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+            ],
+        });
+        console.log(`브라우저 인스턴스 생성 완료`);
+        return browser;
+    } catch (error) {
+        console.error(`브라우저 생성 중 오류 발생: ${error.message}`);
+        throw error;
+    }
+}
 
   private async safeGoto(page: puppeteer.Page, url: string): Promise<void> {
     try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 100000 });
     } catch (error) {
       console.error(`페이지 이동 실패: ${url}, 에러 메시지: ${error.message}`);
     }
@@ -149,7 +163,7 @@ export class CrawlingService {
 
         await this.safeGoto(page, datasetUrl);
 
-        await page.waitForSelector('a[target="ifr1"]', {timeout: 10000});
+        await page.waitForSelector('a[target="ifr1"]', {timeout: 100000});
         const apiUrl = await page.$eval('a[target="ifr1"]', (link) => link.href);
 
         const existingUrl = await this.urlRepository.findOne({
@@ -565,6 +579,8 @@ export class CrawlingService {
   public async startCrawling(): Promise<void> {
     try {
         const startTime = Date.now();
+
+        console.log(`크롤링 준비`);
 
         this.browser = await this.restartBrowser();
         console.log(`[0ms] 브라우저 재시작 완료`);
