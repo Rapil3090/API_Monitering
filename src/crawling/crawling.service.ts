@@ -39,7 +39,7 @@ export class CrawlingService {
         console.log(`새로운 브라우저 인스턴스 생성 중...`);
         const browser = await puppeteer.launch({
             headless: true,
-            executablePath: '/usr/bin/chromium-browser',
+            // executablePath: '/usr/bin/chromium-browser',
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -192,6 +192,11 @@ export class CrawlingService {
       const targetURL = 'https://www.freepublicapis.com/tags/all';
       const baseUrl = new URL(targetURL).origin;
   
+      if (!this.browser) {
+        console.error('브라우저 인스턴스가 없습니다. 초기화 중...');
+        this.browser = await this.restartBrowser();
+      }
+
       const page = await this.browser.newPage();
   
       console.log(`페이지 이동 중: ${targetURL}`);
