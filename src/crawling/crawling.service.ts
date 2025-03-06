@@ -625,6 +625,19 @@ export class CrawlingService {
     }
   };
 
+
+  public async seoulCrawling() {
+    
+    const datasetUrls = await this.extractSeoulDatasetUrls();
+    await this.processSeoulOpenApiUrls(datasetUrls);
+  };
+
+  public async extractCrawling() {
+
+    await this.extractAllData();
+  }
+
+
   public async pokeCrawling1() {
 
     await this.crawlPokeArticles1();
@@ -636,6 +649,22 @@ export class CrawlingService {
     await this.crawlPokeArticles2();
 
   };
+
+  public async jsonPlaceholderCrawling() {
+
+    await this.crawlJsonPlaceholder();
+  };
+
+  public async restCountries() {
+
+    await this.crawlRestCountries();
+  };
+
+  public async randomWordsCrawling() {
+
+    await this.fetchRandomWords();
+  };
+
 
 
   

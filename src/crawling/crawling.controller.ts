@@ -12,6 +12,16 @@ export class CrawlingController {
   @Get()
   findAll() {
     return this.crawlingService.startCrawling();
+  };
+
+  @Get('seoul')
+  seoul()   {
+    return this.crawlingService.seoulCrawling();
+  };
+
+  @Get('extract')
+  extract() {
+    return this.crawlingService.extractCrawling();
   }
 
   @Get('poke1')
@@ -24,6 +34,19 @@ export class CrawlingController {
     return this.crawlingService.pokeCrawling2();
   };
 
-  
+  @Get('json')
+  json() {
+    return this.crawlingService.jsonPlaceholderCrawling();
+  };
+
+  @Get('rest')
+  restCountries() {
+    return this.crawlingService.restCountries();
+  };
+
+  @Get('words')
+  randomWords() {
+    return this.crawlingService.randomWordsCrawling();
+  };
 
 }
