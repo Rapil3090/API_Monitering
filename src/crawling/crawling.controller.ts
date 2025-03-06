@@ -14,4 +14,16 @@ export class CrawlingController {
     return this.crawlingService.startCrawling();
   }
 
+  @Get('poke1')
+  poke1() {
+    return this.crawlingService.pokeCrawling1();
+  };
+
+  @Get('poke2')
+  poke2() {
+    return this.crawlingService.pokeCrawling2();
+  };
+
+  
+
 }

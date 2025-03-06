@@ -623,7 +623,19 @@ export class CrawlingService {
             await this.browser.close();
         }
     }
-};
+  };
+
+  public async pokeCrawling1() {
+
+    await this.crawlPokeArticles1();
+
+  };
+
+  public async pokeCrawling2() {
+
+    await this.crawlPokeArticles2();
+
+  };
 
 
   
