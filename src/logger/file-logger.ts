@@ -5,12 +5,16 @@ import * as puppeteer from 'puppeteer';
 
 export class FileLogger extends ConsoleLogger {
   private logDirectory = path.resolve(__dirname, '../../logger/file-logger'); 
-  private logFile = path.join(this.logDirectory, 'application.log'); 
 
   constructor() {
     super();
     this.ensureLogDirectoryExists();
     this.overrideConsole();
+  }
+
+  private getLogFile(): string {
+    const date = new Date().toISOString().split('T')[0];
+    return path.join(this.logDirectory, `${date}_application.log`);
   }
 
   log(message: string, context?: string) {
@@ -56,8 +60,9 @@ export class FileLogger extends ConsoleLogger {
 
   private writeToFile(level: string, message: string, context?: string) {
     const logMessage = `[${new Date().toISOString()}] [${level}] ${context ? `[${context}]` : ''} ${message}\n`;
+    const logFile = this.getLogFile();
     try {
-      fs.appendFileSync(this.logFile, logMessage);
+      fs.appendFileSync(logFile, logMessage);
     } catch (error) {
       console.error(`Failed to write to log file: ${error.message}`);
     }
