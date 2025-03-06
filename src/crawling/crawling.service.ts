@@ -313,14 +313,14 @@ export class CrawlingService {
           if (result.url) {
             console.log("result.url", result.url);
 
-            const existingUrl = await this.apiEndpointRepository.findOne({
+            const existingUrl = await this.urlRepository.findOne({
               where: {
                 url: result.url,
               }
             });
       
             if (!existingUrl) {
-              await this.apiEndpointRepository.save({
+              await this.urlRepository.save({
                 url: result.url,
               })
             };
