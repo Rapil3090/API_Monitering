@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Url } from "src/api-endpoint/entities/url.entity";
 
 @Entity()
 export class SuccessStatus {
@@ -8,4 +9,7 @@ export class SuccessStatus {
 
     @Column()
     succcess: boolean;
+
+    @ManyToOne(() => Url, url => url.successStatuses)
+    url: Url;
 }

@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Url } from "src/api-endpoint/entities/url.entity";
 
 @Entity()
 export class ResponseTime {
@@ -7,5 +8,8 @@ export class ResponseTime {
     id: number;
 
     @Column()
-    time: number;
+    time: Date;
+
+    @ManyToOne(() => Url, url => url.responseTimes)
+    url: Url;
 }

@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Url } from "src/api-endpoint/entities/url.entity";
 
 @Entity()
 export class ResponseBody {
@@ -6,33 +7,9 @@ export class ResponseBody {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
-    body1: string;
+    @Column({type:'text',nullable: true})
+    responseData: string;
 
-    @Column()
-    body2: string;
-
-    @Column()
-    body3: string;
-
-    @Column()
-    body4: string;
-
-    @Column()
-    body5: string;
-
-    @Column()
-    body6: string;
-
-    @Column()
-    body7: string;
-
-    @Column()
-    body8: string;
-    
-    @Column()
-    body9: string;
-
-    @Column()
-    body10: string;
+    @ManyToOne(() => Url, url => url.responseBodies)
+    url: Url;
 }

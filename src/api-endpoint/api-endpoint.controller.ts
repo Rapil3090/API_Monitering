@@ -32,13 +32,10 @@ export class ApiEndpointController {
     return this.apiEndpointService.remove(id);
   }
 
-  @Get('/test/test')
-  test() {
-    return this.apiEndpointService.scheduledApiCall();
+  @Get('/url/:id')
+  findByUrlId(@Param('id') id: number) {
+    return this.apiEndpointService.findByUrlId(id);
   }
 
-  @Get('/test/500')
-  triggerError() {
-    throw new InternalServerErrorException('의도적으로 발생시킴')
-  }
+
 }

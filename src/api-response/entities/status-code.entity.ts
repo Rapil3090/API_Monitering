@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Url } from "src/api-endpoint/entities/url.entity";
 
 @Entity()
 export class StatusCode {
@@ -6,7 +7,9 @@ export class StatusCode {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ type: 'integer'})
     code: number;
     
+    @ManyToOne(() => Url, url => url.statusCodes)
+    url: Url;
 }

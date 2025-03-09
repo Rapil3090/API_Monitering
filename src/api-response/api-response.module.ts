@@ -7,7 +7,7 @@ import { RequestIntervalRepository } from './repository/request-interval.reposit
 import { ResponseBodyRepository } from './repository/response-body.repository';
 import { ResponseTime } from './entities/response-time.entity';
 import { ResponseTimeRepository } from './repository/response-time.repository';
-import { StatusCodeRepository } from './repository/status-code.respository';
+import { StatusCodeRepository } from './repository/status-code.repository';
 import { SuccessStatusRepository } from './repository/success-status.repository';
 
 @Module({

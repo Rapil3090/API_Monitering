@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Url } from "./url.entity";
 
 @Entity()
 export class Parameter {
@@ -7,6 +8,14 @@ export class Parameter {
     id: number;
 
     @Column()
-    parameters: string;
-    
+    key: string;
+
+    @Column()
+    value: string;
+
+    @Column()
+    type: string;
+
+    @ManyToOne(() => Url, url => url.parameters)
+    url: Url;
 }
