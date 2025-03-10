@@ -6,7 +6,7 @@ import { ApiEndpointService } from "src/api-endpoint/api-endpoint.service";
 export class CronjobService {
   constructor(private readonly apiEndpointService: ApiEndpointService) {}
 
-  @Cron(CronExpression.EVERY_5_SECONDS, { timeZone: "Asia/Seoul" })
+  @Cron(CronExpression.EVERY_HOUR, { timeZone: "Asia/Seoul" })
   async scheduledApiCallJob() {
     await this.apiEndpointService.scheduledApiCall();
   }
