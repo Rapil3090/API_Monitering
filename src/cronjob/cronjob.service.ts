@@ -12,7 +12,7 @@ export class CronjobService {
     await this.apiEndpointService.scheduledApiCall();
   }
 
-  @Cron(CronExpression.EVERY_SECOND, { timeZone: 'Asia/Seoul' })
+  @Cron(CronExpression.EVERY_MINUTE, { timeZone: 'Asia/Seoul' })
   async callhelth() {
     const totalMemory = os.totalmem() / (1024 * 1024);
     const freeMemory = os.freemem() / (1024 * 1024);
