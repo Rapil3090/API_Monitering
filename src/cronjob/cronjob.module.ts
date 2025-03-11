@@ -17,6 +17,7 @@ import { ResponseTime } from "src/api-response/entities/response-time.entity";
 import { SuccessStatus } from "src/api-response/entities/success-status.entity";  
 import { StatusCode } from "src/api-response/entities/status-code.entity";
 import { Parameter } from "src/api-endpoint/entities/parameter.entity";
+import { HealthCheckService } from "src/health-check/health-check.service";
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { Parameter } from "src/api-endpoint/entities/parameter.entity";
     CronjobService,
     ApiEndpointService,
     ApiResponseService,
+    HealthCheckService,
     {
       provide: 'TIMERS_MAP',
       useValue: new Map<number, NodeJS.Timeout>(),

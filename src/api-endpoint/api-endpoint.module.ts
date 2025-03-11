@@ -20,6 +20,7 @@ import { SuccessStatusRepository } from 'src/api-response/repository/success-sta
 import { ResponseBodyRepository } from 'src/api-response/repository/response-body.repository';
 import { ResponseTimeRepository } from 'src/api-response/repository/response-time.repository';import { StatusCodeRepository } from 'src/api-response/repository/status-code.repository';
 import { Parameter } from './entities/parameter.entity';
+import { HealthCheckModule } from 'src/health-check/health-check.module';
 
 
 @Module({
@@ -35,7 +36,8 @@ import { Parameter } from './entities/parameter.entity';
       StatusCode,
       SuccessStatus,
       Parameter,
-    ]),
+    ]), 
+    HealthCheckModule,
   ],
   controllers: [ApiEndpointController],
   providers: [
