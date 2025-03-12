@@ -545,7 +545,7 @@ export class CrawlingService {
   };
 
   private async fetchRandomWords(): Promise<void> {
-    const randomWordApiUrl = 'https://random-word-api.herokuapp.com/word?number=5000';
+    const randomWordApiUrl = 'https://random-word-api.herokuapp.com/word?number=50000';
 
     try {
       console.log('랜덤 단어 API 호출 중...');
