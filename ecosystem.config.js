@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'api-monitoring-3000',
+      name: 'api-monitoring',
       script: 'dist/main.js',
       instances: 1,
       env: {
@@ -10,26 +10,6 @@ module.exports = {
       watch: false,
       ignore_watch: ["logger", "node_modules"]
     },
-    {
-      name: 'api-monitoring-20000',
-      script: 'dist/main.js',
-      instances: 1,
-      env: {
-        PORT: 20000
-      },
-      watch: false,
-      ignore_watch: ["logger", "node_modules"]
-    },
-    {
-      name: 'api-monitoring-20001',
-      script: 'dist/main.js',
-      instances: 1,
-      env: {
-        PORT: 20001
-      },
-      watch: false,
-      ignore_watch: ["logger", "node_modules"]
-    }
   ],
 
   deploy : {
