@@ -36,8 +36,6 @@ export class HealthCheckService {
           uptime: `${os.uptime()} seconds`,
         };
     
-        console.log(JSON.stringify(healthData, null, 2));
-    
         return healthData;
       }
 } 

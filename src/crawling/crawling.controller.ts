@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { CrawlingService } from './crawling.service';
 import { CreateCrawlingDto } from './dto/create-crawling.dto';
 import { UpdateCrawlingDto } from './dto/update-crawling.dto';
@@ -44,9 +44,9 @@ export class CrawlingController {
     return this.crawlingService.restCountries();
   };
 
-  @Get('words')
-  randomWords() {
-    return this.crawlingService.randomWordsCrawling();
-  };
+  @Get('words/:count')
+  async getRandomWords(@Param('count', ParseIntPipe) count: number) {
+    return await this.crawlingService.fetchRandomWords(count);
+  }
 
 }
