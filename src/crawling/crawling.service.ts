@@ -39,7 +39,7 @@ export class CrawlingService {
         console.log(`새로운 브라우저 인스턴스 생성 중...`);
         const browser = await puppeteer.launch({
             headless: true,
-            executablePath: '/usr/bin/chromium-browser',
+            // executablePath: '/usr/bin/chromium-browser',
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -544,60 +544,65 @@ export class CrawlingService {
     }
   };
 
-  private async fetchRandomWords(): Promise<void> {
-    const randomWordApiUrl = 'https://random-word-api.herokuapp.com/word?number=5000';
-
+  public async fetchRandomWords(wordCount: number): Promise<void> {
+    const randomWordApiUrl = `https://random-word-api.herokuapp.com/word?number=${wordCount}`;
+  
     try {
       console.log('랜덤 단어 API 호출 중...');
-
-      const startApiCall = Date.now(); 
-    
-      const response = await axios.get(randomWordApiUrl);
-
-      const endApiCall = Date.now();
-
-      console.log(`랜덤 단어 API 호출 완료 (소요 시간: ${endApiCall - startApiCall}ms)`);
-
-      const randomWords: string[] = response.data;
-
-      console.log(`총 ${randomWords.length}개의 단어를 가져왔습니다.`);
-
-      const dictionaryApiBaseUrl = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
-      const dictionaryUrls = randomWords.map((word) => `${dictionaryApiBaseUrl}${word}`);
-
-
-      for(const url of dictionaryUrls) {
-
-        const startDbQuery = Date.now(); 
-
-        const existingUrl = await this.urlRepository.findOne({
-          where: {
-            url,
-          }
-        });
-
-        const endDbQuery = Date.now();
-
-        console.log(`DB 조회 소요 시간: ${endDbQuery - startDbQuery}ms`);
   
-        if (!existingUrl) {
-          const startDbSave = Date.now();
+      const startApiCall = Date.now();
+  
+      const response = await axios.get(randomWordApiUrl);
+  
+      const endApiCall = Date.now();
+  
+      console.log(`랜덤 단어 API 호출 완료 (소요 시간: ${endApiCall - startApiCall}ms)`);
+  
+      const randomWords: string[] = response.data;
+  
+      console.log(`총 ${randomWords.length}개의 단어를 가져왔습니다.`);
+  
+      const dictionaryApiBaseUrl = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
+      const batchSize = 5000;
+  
+      for (let i = 0; i < randomWords.length; i += batchSize) {
+        const batch = randomWords.slice(i, i + batchSize);
+        const dictionaryUrls = batch.map((word) => `${dictionaryApiBaseUrl}${word}`);
+  
+        console.log(`배치 ${i / batchSize + 1} 처리 중...`);
+  
+        for (const url of dictionaryUrls) {
 
-          await this.urlRepository.save({
-            url,
+          const startDbQuery = Date.now(); 
+
+          const existingUrl = await this.urlRepository.findOne({
+            where: { url },
           });
 
-          const endDbSave = Date.now(); 
+          const endDbQuery = Date.now();
 
-          console.log(`DB 저장 소요 시간: ${endDbSave - startDbSave}ms`);
-        };
-      };
+          console.log(`DB 조회 소요 시간: ${endDbQuery - startDbQuery}ms`);
 
-      console.log(`모든 URL이 종료되었습니다.`);
+          if (!existingUrl) {
+            const startDbSave = Date.now();
+
+            await this.urlRepository.save({ url });
+
+            const endDbSave = Date.now();
+
+            console.log(`DB 저장 소요 시간: ${endDbSave - startDbSave}ms`);
+          }
+        }
+  
+        console.log(`배치 ${i / batchSize + 1} 처리 완료!`);
+      }
+  
+      console.log(`모든 URL 처리가 완료되었습니다.`);
     } catch (error) {
       console.error(`랜덤 단어 API 호출 중 오류 발생: ${error.message}`);
     }
-  };
+  }
+  
 
   
 
@@ -637,10 +642,6 @@ export class CrawlingService {
         methodStartTime = Date.now();
         await this.crawlRestCountries();
         console.log(`[${Date.now() - startTime}ms] crawlRestCountries 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
-
-        methodStartTime = Date.now();
-        await this.fetchRandomWords();
-        console.log(`[${Date.now() - startTime}ms] fetchRandomWords 완료 (소요 시간: ${Date.now() - methodStartTime}ms)`);
 
     } catch (error) {
         if (this.browser) {
@@ -685,10 +686,6 @@ export class CrawlingService {
     await this.crawlRestCountries();
   };
 
-  public async randomWordsCrawling() {
-
-    await this.fetchRandomWords();
-  };
 
 
 
