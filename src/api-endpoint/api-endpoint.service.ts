@@ -153,133 +153,177 @@ export class ApiEndpointService {
     return "ok";
   }
 
-  async sendApiRequest({url, parameters}: {
-    url: RequestUrlDto, 
-    parameters: RequestParameterDto[]
-  }) {
+  async sendApiRequest({ url, parameters }: { url: RequestUrlDto; parameters: RequestParameterDto[] }) {
     const retries = 3;
     const currentTime = new Date();
-
+  
     const urlEntity = await this.urlRepository.findOne({
-      where: { id: url.id }
+      where: { id: url.id },
     });
-
+  
     if (!urlEntity) {
       throw new NotFoundException(`URL을 찾을 수 없습니다: ${url.url}`);
     }
-
-    for (let i = 1; i <= retries; i++) {
-      try {
-        const queryParams = parameters.reduce((acc: Record<string, string>, param) => {
-          if (param.type.toLowerCase() === 'query') {
-            acc[param.key] = param.value;
-          }
-          return acc;
-        }, {});
-
-        const headerParams = parameters.reduce((acc: Record<string, string>, param) => {
-          if (param.type.toLowerCase() === 'header') {
-            acc[param.key] = param.value;
-          }
-          return acc;
-        }, {});
-
-        const response: AxiosResponse = await axios.get(url.url, {
-          params: queryParams,
-          headers: headerParams,
-          timeout: 5000,
-          validateStatus: function (status) {
-            return status < 600;
-          },
-        });
-
-        const endTime = new Date();
-        const elapsedTime = endTime.getTime() - currentTime.getTime();
-
-        const requestInterval = new RequestInterval();
-        requestInterval.intervalTime = elapsedTime;
-        requestInterval.url = urlEntity;
-
-        const responseBody = new ResponseBody();
-        responseBody.responseData = typeof response.data === 'string' 
-          ? response.data 
-          : JSON.stringify(response.data);
-        responseBody.url = urlEntity;
-
-        const statusCode = new StatusCode();
-        statusCode.code = response.status;
-        statusCode.url = urlEntity;
-
-
-        const successStatus = new SuccessStatus();
-        successStatus.succcess = true;
-        successStatus.url = urlEntity;
-
-        const responseTime = new ResponseTime();
-        responseTime.time = endTime;
-        responseTime.url = urlEntity;
-
-        
-        await this.requestIntervalRepository.save(requestInterval),
-        await this.responseBodyRepository.save(responseBody),
-        await this.statusCodeRepository.save(statusCode),
-        await this.successStatusRepository.save(successStatus),
-        await this.responseTimeRepository.save(responseTime)
-        
-
-        console.log(`${urlEntity.id} 저장 완료`);
-        
-      } catch (error) {
-        console.error('에러 발생:', error.message);
-        
+  
+    try {
+      const queryParams = parameters.reduce((acc: Record<string, string>, param) => {
+        if (param.type.toLowerCase() === 'query') {
+          acc[param.key] = param.value;
+        }
+        return acc;
+      }, {});
+  
+      const headerParams = parameters.reduce((acc: Record<string, string>, param) => {
+        if (param.type.toLowerCase() === 'header') {
+          acc[param.key] = param.value;
+        }
+        return acc;
+      }, {});
+  
+      const response: AxiosResponse = await axios.get(url.url, {
+        params: queryParams,
+        headers: headerParams,
+        timeout: 5000,
+        validateStatus: (status) => status < 600,
+      });
+  
+      const endTime = new Date();
+      const elapsedTime = endTime.getTime() - currentTime.getTime();
+  
+      const requestInterval = new RequestInterval();
+      requestInterval.intervalTime = elapsedTime;
+      requestInterval.url = urlEntity;
+  
+      const responseBody = new ResponseBody();
+      responseBody.responseData =
+        typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+      responseBody.url = urlEntity;
+  
+      const statusCode = new StatusCode();
+      statusCode.code = response.status;
+      statusCode.url = urlEntity;
+  
+      const successStatus = new SuccessStatus();
+      successStatus.succcess = true;
+      successStatus.url = urlEntity;
+  
+      const responseTime = new ResponseTime();
+      responseTime.time = endTime;
+      responseTime.url = urlEntity;
+  
+      await this.requestIntervalRepository.save(requestInterval);
+      await this.responseBodyRepository.save(responseBody);
+      await this.statusCodeRepository.save(statusCode);
+      await this.successStatusRepository.save(successStatus);
+      await this.responseTimeRepository.save(responseTime);
+  
+      console.log(`${urlEntity.id} 저장 완료`);
+    } catch (error) {
+      let retryCount = 0;
+      let success = false;
+  
+      while (retryCount < retries && !success) {
+        retryCount++;
+        console.error(`에러 발생 (${retryCount}/${retries}):`, error.message);
+  
         const errorOccurredAt = new Date();
-        const elapsedTime = errorOccurredAt.getTime() - currentTime.getTime();
-
+  
         try {
-          const statusCode = new StatusCode();
-          statusCode.code = error.response?.status || 0;
-          statusCode.url = urlEntity;
+          const queryParamsRetry = parameters.reduce((acc: Record<string, string>, param) => {
+            if (param.type.toLowerCase() === 'query') {
+              acc[param.key] = param.value;
+            }
+            return acc;
+          }, {});
+  
+          const headerParamsRetry = parameters.reduce((acc: Record<string, string>, param) => {
+            if (param.type.toLowerCase() === 'header') {
+              acc[param.key] = param.value;
+            }
+            return acc;
+          }, {});
+  
+          const retryResponse: AxiosResponse = await axios.get(url.url, {
+            params: queryParamsRetry,
+            headers: headerParamsRetry,
+            timeout: 5000,
+            validateStatus: (status) => status < 600,
+          });
+  
+          const endRetryTime = new Date();
+          const retryElapsedTime = endRetryTime.getTime() - currentTime.getTime();
+  
+          const requestIntervalRetry = new RequestInterval();
+          requestIntervalRetry.intervalTime = retryElapsedTime;
+          requestIntervalRetry.url = urlEntity;
+  
+          const responseBodyRetry = new ResponseBody();
+          responseBodyRetry.responseData =
+            typeof retryResponse.data === 'string'
+              ? retryResponse.data
+              : JSON.stringify(retryResponse.data);
+          responseBodyRetry.url = urlEntity;
+  
+          const statusCodeRetry = new StatusCode();
+          statusCodeRetry.code = retryResponse.status;
+          statusCodeRetry.url = urlEntity;
+  
+          const successStatusRetry = new SuccessStatus();
+          successStatusRetry.succcess = true;
+          successStatusRetry.url = urlEntity;
+  
+          const responseTimeRetry = new ResponseTime();
+          responseTimeRetry.time = endRetryTime;
+          responseTimeRetry.url = urlEntity;
+  
+          await this.requestIntervalRepository.save(requestIntervalRetry);
+          await this.responseBodyRepository.save(responseBodyRetry);
+          await this.statusCodeRepository.save(statusCodeRetry);
+          await this.successStatusRepository.save(successStatusRetry);
+          await this.responseTimeRepository.save(responseTimeRetry);
+  
+          console.log(`${urlEntity.id} 재시도 후 저장 완료`);
+          success = true;
+        } catch (retryError) {
+          console.error(`재시도 에러 (${retryCount}/${retries}):`, retryError.message);
+  
+          if (
+            retryCount >= retries ||
+            !(retryError.response?.status >= 500 && retryError.response?.status < 600)
+          ) {
 
-          const successStatus = new SuccessStatus();
-          successStatus.succcess = false;
-          successStatus.url = urlEntity;
-
-          const responseTime = new ResponseTime();
-          responseTime.time = errorOccurredAt;
-          responseTime.url = urlEntity;
-
-          const requestInterval = new RequestInterval();
-          requestInterval.intervalTime = elapsedTime;
-          requestInterval.url = urlEntity;
-
-          const responseBody = new ResponseBody();
-          responseBody.responseData = `요청 실패: ${error.message || 'Unknown error'}`;
-          responseBody.url = urlEntity;
-
-
-          await this.statusCodeRepository.save(statusCode),
-          await this.successStatusRepository.save(successStatus),
-          await this.responseTimeRepository.save(responseTime),
-          await this.requestIntervalRepository.save(requestInterval),
-          await this.responseBodyRepository.save(responseBody)
-
-        } catch (dbError) {
-          console.error('DB 저장 실패:', dbError.message);
-        }
-
-        if (error.response?.status >= 500 && error.response?.status < 600) {
-          if (i < retries) {
-            console.log(`재시도 중... (${i}/${retries})`);
-            continue;
+            try {
+              const statusCodeFailure = new StatusCode();
+              statusCodeFailure.code =
+                retryError.response?.status || error.response?.status || 0;
+              statusCodeFailure.url = urlEntity;
+  
+              const successStatusFailure = new SuccessStatus();
+              successStatusFailure.succcess = false;
+              successStatusFailure.url = urlEntity;
+  
+              const responseBodyFailure = new ResponseBody();
+              responseBodyFailure.responseData =
+                `요청 실패: ${retryError.message || 'Unknown error'}`;
+              responseBodyFailure.url = urlEntity;
+  
+              const requestIntervalFailure = new RequestInterval();
+              requestIntervalFailure.intervalTime =
+                errorOccurredAt.getTime() - currentTime.getTime();
+              requestIntervalFailure.url = urlEntity;
+  
+              await this.statusCodeRepository.save(statusCodeFailure);
+              await this.successStatusRepository.save(successStatusFailure);
+              await this.responseBodyRepository.save(responseBodyFailure);
+              await this.requestIntervalRepository.save(requestIntervalFailure);
+  
+              console.log(`${urlEntity.id} 요청 실패 정보 저장 완료`);
+            } catch (dbError) {
+              console.error('DB 저장 실패:', dbError.message);
+            }
+            break;
           }
         }
-
-        return {
-          responseTime: elapsedTime,
-          statusCode: error.response?.status || 0,
-          body: `요청 실패: ${error.message || 'Unknown error'}`,
-          success: false,
-        };
       }
     }
   }
@@ -309,7 +353,7 @@ export class ApiEndpointService {
         url: urlDto,
         parameters: parameterDtos
       });
-      console.log('result', result);
+
     }
   }
 
