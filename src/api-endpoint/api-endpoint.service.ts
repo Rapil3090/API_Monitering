@@ -30,6 +30,7 @@ import { SuccessStatusRepository } from "src/api-response/repository/success-sta
 import { log } from "console";
 import { Parameter } from "./entities/parameter.entity";
 import { ParameterRepository } from "./repository/parameter.repository";
+import { ApiResponseDto } from "./dto/api-response.dto";
 
 @Injectable()
 export class ApiEndpointService {
@@ -356,5 +357,34 @@ export class ApiEndpointService {
 
     }
   }
+
+  async getApiResponse(urlId: number): Promise<ApiResponseDto[]> {
+    const url = await this.urlRepository.findOne({
+      where: { id: urlId },
+      relations: ['requestIntervals', 'responseBodies', 'statusCodes', 'successStatuses', 'responseTimes']
+    });
+
+    if (!url) {
+      throw new NotFoundException(`URL을 찾을 수 없습니다: ${urlId}`);
+    }
+
+    const responses: ApiResponseDto[] = [];
+    
+    for (let i = 0; i < url.requestIntervals.length; i++) {
+      responses.push({
+        id: url.id.toString(),
+        endpointId: url.id.toString(),
+        statusCode: url.statusCodes[i].code,
+        responseTime: url.requestIntervals[i].intervalTime,
+        success: url.successStatuses[i].succcess,
+        timestamp: url.responseTimes[i].time,
+        responseBody: url.responseBodies[i].responseData
+      });
+    }
+
+    return responses;
+  }
+
+  
 
 }
