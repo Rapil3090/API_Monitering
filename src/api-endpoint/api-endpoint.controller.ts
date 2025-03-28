@@ -42,5 +42,10 @@ export class ApiEndpointController {
     return this.apiEndpointService.scheduledApiCall();
   }
 
+  @Get('/response/:id')
+  findResponseByUrl(@Param('id') id: number) {
+    return this.apiEndpointService.getApiResponse(id);
+  }
+
 
 }
