@@ -371,13 +371,17 @@ export class ApiEndpointService {
     const responses: ApiResponseDto[] = [];
     
     for (let i = 0; i < url.requestIntervals.length; i++) {
+      
+      const utcDate = new Date(url.responseTimes[i].time);
+      const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+
       responses.push({
         id: url.id.toString(),
-        endpointId: url.id.toString(),
+        url: url.url,
         statusCode: url.statusCodes[i].code,
         responseTime: url.requestIntervals[i].intervalTime,
         success: url.successStatuses[i].succcess,
-        timestamp: url.responseTimes[i].time,
+        timestamp: kstDate.toISOString().replace('T', ' ').slice(0, 19),
         responseBody: url.responseBodies[i].responseData
       });
     }

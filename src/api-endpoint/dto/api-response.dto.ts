@@ -3,9 +3,9 @@ import { IsBoolean, IsDate, IsNumber, IsObject, IsOptional, IsString } from "cla
 export class ApiResponseDto {
     @IsString()
     id: string;
-  
+
     @IsString()
-    endpointId: string;
+    url: string;
   
     @IsNumber()
     statusCode: number;
@@ -17,7 +17,7 @@ export class ApiResponseDto {
     success: boolean;
   
     @IsDate()
-    timestamp: Date;
+    timestamp: String;
   
     @IsObject()
     @IsOptional()
