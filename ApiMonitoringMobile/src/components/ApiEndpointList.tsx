@@ -39,10 +39,6 @@ export const ApiEndpointList: React.FC<ApiEndpointListProps> = ({
     }
   };
 
-
-
-  ㅇㅇ
-  
   const renderItem = ({ item }: { item: ApiEndpoint }) => (
     <TouchableOpacity
       style={styles.endpointItem}
