@@ -26,7 +26,7 @@ export interface ApiResponse {
 export class ApiEndpointService {
   private baseUrl: string;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string = 'http://localhost:3000') {
     this.baseUrl = baseUrl;
   }
 
