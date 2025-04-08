@@ -10,14 +10,14 @@ export class CronjobService {
     private readonly apiEndpointService: ApiEndpointService, 
     private readonly healthCheckService: HealthCheckService) {}
 
-  @Cron(CronExpression.EVERY_HOUR, { timeZone: "Asia/Seoul" })
-  async scheduledApiCallJob() {
-    await this.apiEndpointService.scheduledApiCall();
-  }
+  // @Cron(CronExpression.EVERY_HOUR, { timeZone: "Asia/Seoul" })
+  // async scheduledApiCallJob() {
+  //   await this.apiEndpointService.scheduledApiCall();
+  // }
 
-  @Cron(CronExpression.EVERY_MINUTE, { timeZone: "Asia/Seoul" })
-  async healthCheck() {
-    await this.healthCheckService.checkSystemHealth();
-  }
+  // @Cron(CronExpression.EVERY_MINUTE, { timeZone: "Asia/Seoul" })
+  // async healthCheck() {
+  //   await this.healthCheckService.checkSystemHealth();
+  // }
 
 }
