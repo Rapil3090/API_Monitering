@@ -65,10 +65,16 @@ PODS:
     - RCTRequired
     - RCTTypeSafety
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-FabricImage
+    - React-graphics
     - React-jsi
     - React-jsiexecutor
     - React-NativeModulesApple
+    - React-rendererdebug
     - React-rncore
+    - React-utils
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
   - React-Core (0.73.6):
@@ -1228,7 +1234,7 @@ SPEC CHECKSUMS:
   RCTTypeSafety: 678e344fb976ff98343ca61dc62e151f3a042292
   React: e296bcebb489deaad87326067204eb74145934ab
   React-callinvoker: d0b7015973fa6ccb592bb0363f6bc2164238ab8c
-  React-Codegen: f034a5de6f28e15e8d95d171df17e581d5309268
+  React-Codegen: 26de3e12a2785a329430b9471a915d6c135ead5d
   React-Core: 44c936d0ab879e9c32e5381bd7596a677c59c974
   React-CoreModules: 558228e12cddb9ca00ff7937894cc5104a21be6b
   React-cxxreact: 1fcf565012c203655b3638f35aa03c13c2ed7e9e
@@ -1267,6 +1273,6 @@ SPEC CHECKSUMS:
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 805bf71192903b20fc14babe48080582fee65a80
 
-PODFILE CHECKSUM: 7f60d3b0c8903c71f104671e4b451cdd63b4ec81
+PODFILE CHECKSUM: 3325dcc696f351eab6c049f4387df0922e515fbc
 
 COCOAPODS: 1.16.2
